@@ -51,3 +51,11 @@ tqdm>=4.64.0
 # 类型检查和验证
 pydantic>=1.10.0
 typing-extensions>=4.0.0
+
+# LangGraph 智能体框架 (新增)
+langgraph>=0.6.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0  # 可选，用于 OpenAI LLM 集成
+google-generativeai>=0.3.0  # Google Gemini API（可选）
+dashscope>=1.14.0  # 阿里云百炼 DashScope API
+reportlab>=4.0.0  # PDF 生成
