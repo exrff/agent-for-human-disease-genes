@@ -1,0 +1,4 @@
+Polarity,Count,Percentage,Primary_System,Secondary_System,Tertiary_System,Representative_Examples,Biological_Rationale
+Anti-inflammatory,300,1.17,System_B (280),System_D (11),System_0 (7),"symbiont-mediated suppression of cytoplasmic pattern recognition; suppression of RIG-I activity; suppression of MAVS activity",Negative regulation of inflammatory responses to prevent excessive tissue damage
+Pro-inflammatory,154,0.60,System_B (136),System_A (7),System_0 (7),"tumor necrosis factor production; type IIa hypersensitivity; type III hypersensitivity",Activation of inflammatory cascades for pathogen clearance and tissue repair initiation
+Pro-resolving,30,0.12,System_A (28),System_B (1),System_C (1),"resolution of meiotic recombination intermediates; nonphotochemical quenching; telomere capping",Specialized mechanisms for inflammation resolution and tissue repair completion

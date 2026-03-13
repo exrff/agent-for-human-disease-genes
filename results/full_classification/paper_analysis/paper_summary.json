@@ -1,0 +1,22 @@
+{
+  "study_title": "Functional Classification of Biological Processes: A Five-System Framework with 14 Subcategories",
+  "total_biological_processes": 25734,
+  "go_terms_classified": 25153,
+  "kegg_pathways_classified": 581,
+  "subcategories_identified": 14,
+  "average_classification_confidence": 0.547,
+  "high_confidence_classifications": 14773,
+  "inflammation_processes_identified": 484,
+  "key_findings": {
+    "most_populated_subcategory": "Development and Reproductive Maturation",
+    "highest_confidence_subcategory": "Energy Metabolism and Catabolism",
+    "system_distribution": {
+      "System 0: General Molecular Machinery": 13052,
+      "System A: Self-Healing & Structural Reconstruction": 4703,
+      "System B: Immune Defense": 2513,
+      "System C: Energy & Metabolic Homeostasis": 913,
+      "System D: Cognitive-Regulatory": 1906,
+      "System E: Reproduction & Continuity": 2647
+    }
+  }
+}

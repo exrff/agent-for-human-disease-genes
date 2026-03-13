@@ -1,0 +1,13 @@
+sample_id,subject_id,timepoint,day,condition,group
+GSM1219052,Patient_1,Baseline,0,Wound_Healing,Baseline
+GSM1219055,Patient_2,Baseline,0,Wound_Healing,Baseline
+GSM1219058,Patient_3,Baseline,0,Wound_Healing,Baseline
+GSM1219061,Patient_4,Baseline,0,Wound_Healing,Baseline
+GSM1219053,Patient_1,Day_14,14,Wound_Healing,Day_14
+GSM1219056,Patient_2,Day_14,14,Wound_Healing,Day_14
+GSM1219059,Patient_3,Day_14,14,Wound_Healing,Day_14
+GSM1219062,Patient_4,Day_14,14,Wound_Healing,Day_14
+GSM1219054,Patient_1,Day_21,21,Wound_Healing,Day_21
+GSM1219057,Patient_2,Day_21,21,Wound_Healing,Day_21
+GSM1219060,Patient_3,Day_21,21,Wound_Healing,Day_21
+GSM1219063,Patient_4,Day_21,21,Wound_Healing,Day_21

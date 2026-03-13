@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\config\settings.py
+# hypothesis_version: 6.148.8
+
+[0.05, 0.5, 500, 1000, 10000, 'BATCH_SIZE', 'DATA_DIR', 'INFO', 'LOG_FILE', 'LOG_LEVEL', 'MAX_WORKERS', 'RESULTS_DIR', 'batch_size', 'biological_process', 'bonferroni', 'br_br08901.txt', 'cellular_process', 'classification', 'classification.log', 'csv', 'data', 'data/ontology', 'data_dir', 'fdr_bh', 'fdr_by', 'figures', 'go-basic.obo', 'go-basic.txt', 'go_basic_file', 'go_namespaces', 'go_obo_file', 'include_metadata', 'jiang_conrath', 'json', 'kegg_hierarchy_file', 'lin', 'log_file', 'log_level', 'max_workers', 'metabolic_process', 'none', 'ontology_dir', 'output_formats', 'path', 'regulation of', 'reports', 'resnik', 'results', 'results_dir', 'ssgsea_permutations', 'statistical_alpha', 'validation', 'validation_dir']

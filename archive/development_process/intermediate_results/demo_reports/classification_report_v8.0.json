@@ -1,0 +1,160 @@
+{
+  "report_metadata": {
+    "version": "v8.0",
+    "generation_date": "2025-12-24T16:46:00.631413",
+    "total_entries": 6,
+    "total_biological_entries": 6
+  },
+  "system_distribution": {
+    "total_entries": 6,
+    "systems": {
+      "System 0": {
+        "full_name": "System 0: General Molecular Machinery",
+        "count": 1,
+        "percentage": 16.67,
+        "sources": {
+          "GO": 1
+        },
+        "namespaces": {
+          "biological_process": 1
+        }
+      },
+      "System A": {
+        "full_name": "System A: Self-Healing & Structural Reconstruction",
+        "count": 2,
+        "percentage": 33.33,
+        "sources": {
+          "GO": 1,
+          "KEGG": 1
+        },
+        "namespaces": {
+          "biological_process": 1
+        }
+      },
+      "System B": {
+        "full_name": "System B: Immune Defense",
+        "count": 2,
+        "percentage": 33.33,
+        "sources": {
+          "GO": 1,
+          "KEGG": 1
+        },
+        "namespaces": {
+          "biological_process": 1
+        }
+      },
+      "System C": {
+        "full_name": "System C: Energy & Metabolic Homeostasis",
+        "count": 1,
+        "percentage": 16.67,
+        "sources": {
+          "GO": 1
+        },
+        "namespaces": {
+          "biological_process": 1
+        }
+      }
+    }
+  },
+  "coverage_analysis": {
+    "overall_coverage": {
+      "total_entries": 6,
+      "classified_entries": 6,
+      "unclassified_entries": 0,
+      "classification_rate": 100.0
+    },
+    "source_coverage": {
+      "GO": {
+        "total": 4,
+        "classified": 4,
+        "coverage_percentage": 100.0
+      },
+      "KEGG": {
+        "total": 2,
+        "classified": 2,
+        "coverage_percentage": 100.0
+      }
+    },
+    "annotation_coverage": {
+      "subsystem_annotated": 5,
+      "subsystem_rate": 83.33,
+      "inflammation_annotated": 1,
+      "inflammation_rate": 16.67
+    }
+  },
+  "quality_metrics": {
+    "confidence_statistics": {
+      "mean": 0.905,
+      "median": 0.91,
+      "std": 0.033,
+      "min": 0.85,
+      "max": 0.95
+    },
+    "decision_complexity": {
+      "mean_path_length": 0.0,
+      "median_path_length": 0.0,
+      "max_path_length": 0
+    },
+    "classification_specificity": {
+      "multi_system_matches": 0,
+      "multi_system_rate": 0.0
+    },
+    "distribution_balance": {
+      "gini_coefficient": -0.875,
+      "balance_interpretation": "Very balanced distribution"
+    }
+  },
+  "subsystem_analysis": {
+    "System A": {
+      "total_subsystem_entries": 2,
+      "subsystems": {
+        "A1": {
+          "count": 1,
+          "percentage": 50.0
+        },
+        "A2": {
+          "count": 1,
+          "percentage": 50.0
+        }
+      }
+    },
+    "System B": {
+      "total_subsystem_entries": 2,
+      "subsystems": {
+        "B1": {
+          "count": 1,
+          "percentage": 50.0
+        },
+        "B2": {
+          "count": 1,
+          "percentage": 50.0
+        }
+      }
+    },
+    "System C": {
+      "total_subsystem_entries": 1,
+      "subsystems": {
+        "C1": {
+          "count": 1,
+          "percentage": 100.0
+        }
+      }
+    }
+  },
+  "inflammation_analysis": {
+    "overall_distribution": {
+      "pro-inflammatory": {
+        "count": 1,
+        "percentage": 100.0
+      }
+    },
+    "by_system": {
+      "System B": {
+        "pro-inflammatory": {
+          "count": 1,
+          "percentage": 100.0
+        }
+      }
+    }
+  }
+}

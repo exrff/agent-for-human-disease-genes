@@ -1,0 +1,5 @@
+ID,Name,Subcategory_Code,Subcategory_Name,Confidence_Score
+GO:0008150,biological_process,,General Molecular Machinery,0.95
+GO:0008152,metabolic process,,General Molecular Machinery,0.95
+GO:0009987,cellular process,,General Molecular Machinery,0.95
+GO:0032501,multicellular organismal process,,General Molecular Machinery,0.95

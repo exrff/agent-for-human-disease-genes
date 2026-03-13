@@ -1,0 +1,30 @@
+{
+  "dataset": "GSE28914",
+  "time_correlations": {
+    "System A: Self-Healing & Structural Reconstruction": {
+      "correlation": NaN,
+      "p_value": NaN
+    },
+    "System 0: General Molecular Machinery": {
+      "correlation": NaN,
+      "p_value": NaN
+    },
+    "System B: Immune Defense": {
+      "correlation": NaN,
+      "p_value": NaN
+    },
+    "System E: Reproduction & Continuity": {
+      "correlation": NaN,
+      "p_value": NaN
+    },
+    "System D: Cognitive-Regulatory": {
+      "correlation": NaN,
+      "p_value": NaN
+    },
+    "System C: Energy & Metabolic Homeostasis": {
+      "correlation": NaN,
+      "p_value": NaN
+    }
+  },
+  "system_trends": {}
+}

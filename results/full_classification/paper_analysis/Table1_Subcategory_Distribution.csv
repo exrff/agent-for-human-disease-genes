@@ -1,0 +1,16 @@
+Primary_System,Subcategory_Code,Subcategory_Name,Entry_Count,Mean_Confidence,Percentage_of_Total,Percentage_within_System
+System 0: General Molecular Machinery,,General Molecular Machinery,7427,0.5,29.53,100.0
+System A: Self-Healing & Structural Reconstruction,A1,Genomic Stability and Repair,160,0.167,0.64,5.41
+System A: Self-Healing & Structural Reconstruction,A2,Somatic Maintenance and Identity Preservation,1345,0.172,5.35,45.47
+System A: Self-Healing & Structural Reconstruction,A3,Cellular Homeostasis and Structural Maintenance,1421,0.14,5.65,48.04
+System A: Self-Healing & Structural Reconstruction,A4,Inflammation Resolution and Damage Containment,32,0.229,0.13,1.08
+System B: Immune Defense,B1,Innate Immunity,242,0.171,0.96,38.35
+System B: Immune Defense,B2,Adaptive Immunity,290,0.223,1.15,45.96
+System B: Immune Defense,B3,Immune Regulation and Tolerance,99,0.172,0.39,15.69
+System C: Energy & Metabolic Homeostasis,C1,Energy Metabolism and Catabolism,1059,0.129,4.21,37.05
+System C: Energy & Metabolic Homeostasis,C2,Biosynthesis and Anabolism,1739,0.146,6.91,60.85
+System C: Energy & Metabolic Homeostasis,C3,Detoxification and Metabolic Stress Handling,60,0.226,0.24,2.1
+System D: Cognitive-Regulatory,D1,Neural Regulation and Signal Transmission,473,0.191,1.88,5.51
+System D: Cognitive-Regulatory,D2,Endocrine and Autonomic Regulation,8119,0.156,32.28,94.49
+System E: Reproduction & Continuity,E1,Reproduction,138,0.189,0.55,5.14
+System E: Reproduction & Continuity,E2,Development and Reproductive Maturation,2549,0.173,10.13,94.86

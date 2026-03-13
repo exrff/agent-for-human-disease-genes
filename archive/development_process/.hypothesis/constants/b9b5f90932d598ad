@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\models\classification_result.py
+# hypothesis_version: 6.148.8
+
+[1.0, ' -> ', '0', '; ', 'A', 'All_Systems', 'B', 'C', 'ClassificationResult', 'Confidence_Score', 'D', 'Decision_Path', 'E', 'ID', 'Primary_System', 'Subsystem', 'U', 'Unclassified', 'all_systems', 'anti-inflammatory', 'confidence_score', 'decision_path', 'entry_id', 'metadata', 'primary_system', 'pro-inflammatory', 'pro-resolving', 'subsystem']

@@ -1,0 +1,15 @@
+Subcategory_Code,Subcategory_Name,Count,Mean_Confidence,Std_Confidence,Source_Distribution,Percentage
+A1,Genomic Stability and Repair,601,0.859,0.077,"{'GO': 594, 'KEGG': 7}",2.34
+A2,Somatic Maintenance and Identity Preservation,1080,0.853,0.065,"{'GO': 1065, 'KEGG': 15}",4.2
+A3,Cellular Homeostasis and Structural Maintenance,317,0.863,0.069,"{'GO': 313, 'KEGG': 4}",1.23
+A4,Inflammation Resolution and Damage Containment,25,0.868,0.048,"{'GO': 24, 'KEGG': 1}",0.1
+B1,Innate Immunity,168,0.863,0.06,"{'GO': 166, 'KEGG': 2}",0.65
+B2,Adaptive Immunity,1345,0.843,0.052,"{'GO': 1339, 'KEGG': 6}",5.23
+B3,Immune Regulation and Tolerance,673,0.841,0.182,"{'GO': 672, 'KEGG': 1}",2.62
+C1,Energy Metabolism and Catabolism,71,0.897,0.021,"{'GO': 68, 'KEGG': 3}",0.28
+C2,Biosynthesis and Anabolism,324,0.86,0.062,"{'GO': 228, 'KEGG': 96}",1.26
+C3,Detoxification and Metabolic Stress Handling,65,0.897,0.017,"{'GO': 44, 'KEGG': 21}",0.25
+D1,Neural Regulation and Signal Transmission,794,0.861,0.049,"{'GO': 772, 'KEGG': 22}",3.09
+D2,Endocrine and Autonomic Regulation,360,0.845,0.054,"{'GO': 318, 'KEGG': 42}",1.4
+E1,Reproduction,86,0.887,0.034,{'GO': 86},0.33
+E2,Development and Reproductive Maturation,2059,0.888,0.034,"{'GO': 1999, 'KEGG': 60}",8.0

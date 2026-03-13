@@ -1,0 +1,600 @@
+{
+  "validation_metadata": {
+    "validation_date": "2025-12-25T16:20:55.008547",
+    "analysis_type": "subcategory_biological_significance_simulation",
+    "datasets_analyzed": 3,
+    "subcategories_analyzed": 14,
+    "validation_approach": "Biologically-informed simulation based on expected disease-system relationships"
+  },
+  "dataset_summaries": {
+    "GSE28914": {
+      "dataset_info": {
+        "name": "Wound Healing",
+        "expected_system": "System A",
+        "description": "Human skin wound healing time course",
+        "biological_context": "Tissue repair and regeneration processes",
+        "expected_subcategories": [
+          "A1",
+          "A2",
+          "A3",
+          "A4"
+        ]
+      },
+      "expression_data_shape": [
+        0,
+        0
+      ],
+      "subcategory_enrichment_summary": {
+        "A1": {
+          "name": "Genomic Stability and Repair",
+          "mean_enrichment": 0.7140558539115597,
+          "std_enrichment": 0.10274203774230144,
+          "median_enrichment": 0.6980863376445414,
+          "biological_relevance": "Critical for wound healing - DNA repair during cell proliferation"
+        },
+        "A2": {
+          "name": "Somatic Maintenance and Identity Preservation",
+          "mean_enrichment": 0.6521488991884422,
+          "std_enrichment": 0.12080977673107826,
+          "median_enrichment": 0.633308200992129,
+          "biological_relevance": "Essential for wound healing - stem cell activation and differentiation"
+        },
+        "A3": {
+          "name": "Cellular Homeostasis and Structural Maintenance",
+          "mean_enrichment": 0.6241419983199432,
+          "std_enrichment": 0.14587430995378953,
+          "median_enrichment": 0.6253653132508121,
+          "biological_relevance": "Important for wound healing - cellular stress management"
+        },
+        "A4": {
+          "name": "Inflammation Resolution and Damage Containment",
+          "mean_enrichment": 0.7795042400168276,
+          "std_enrichment": 0.15457154979817053,
+          "median_enrichment": 0.7740874581349907,
+          "biological_relevance": "Key for wound healing - resolution of inflammatory response"
+        },
+        "B1": {
+          "name": "Innate Immunity",
+          "mean_enrichment": 0.597989067931522,
+          "std_enrichment": 0.2178109870781255,
+          "median_enrichment": 0.6099469214659538,
+          "biological_relevance": "Primary response in sepsis - pathogen recognition and initial defense"
+        },
+        "B2": {
+          "name": "Adaptive Immunity",
+          "mean_enrichment": 0.2195597819117089,
+          "std_enrichment": 0.19221903011505762,
+          "median_enrichment": 0.15831354097503755,
+          "biological_relevance": "Secondary response in sepsis - specific pathogen clearance"
+        },
+        "B3": {
+          "name": "Immune Regulation and Tolerance",
+          "mean_enrichment": 0.28665257702570157,
+          "std_enrichment": 0.21915112399038084,
+          "median_enrichment": 0.2606152591124647,
+          "biological_relevance": "Critical in sepsis - preventing excessive immune activation"
+        },
+        "C1": {
+          "name": "Energy Metabolism and Catabolism",
+          "mean_enrichment": 0.42957696784390925,
+          "std_enrichment": 0.20315934707577324,
+          "median_enrichment": 0.4643498736282562,
+          "biological_relevance": "Disrupted in Gaucher disease - altered energy metabolism"
+        },
+        "C2": {
+          "name": "Biosynthesis and Anabolism",
+          "mean_enrichment": 0.31310595243470496,
+          "std_enrichment": 0.2292143213903694,
+          "median_enrichment": 0.22723416314949216,
+          "biological_relevance": "Affected in Gaucher disease - altered lipid synthesis"
+        },
+        "C3": {
+          "name": "Detoxification and Metabolic Stress Handling",
+          "mean_enrichment": 0.43544554807877367,
+          "std_enrichment": 0.2155932134100285,
+          "median_enrichment": 0.4802045796232499,
+          "biological_relevance": "Key in Gaucher disease - accumulation of toxic metabolites"
+        },
+        "D1": {
+          "name": "Neural Regulation and Signal Transmission",
+          "mean_enrichment": 0.33412644914956896,
+          "std_enrichment": 0.250530668173795,
+          "median_enrichment": 0.3448728441334048,
+          "biological_relevance": "May be affected in neuronopathic Gaucher disease"
+        },
+        "D2": {
+          "name": "Endocrine and Autonomic Regulation",
+          "mean_enrichment": 0.5930794672132913,
+          "std_enrichment": 0.22099135723855712,
+          "median_enrichment": 0.578154272160565,
+          "biological_relevance": "Systemic regulation in disease states"
+        },
+        "E1": {
+          "name": "Reproduction",
+          "mean_enrichment": 0.28722144522934295,
+          "std_enrichment": 0.20951458597663628,
+          "median_enrichment": 0.24392056248891997,
+          "biological_relevance": "Generally not primary in acute disease states"
+        },
+        "E2": {
+          "name": "Development and Reproductive Maturation",
+          "mean_enrichment": 0.5898244303160738,
+          "std_enrichment": 0.27157377623222806,
+          "median_enrichment": 0.6363452446934352,
+          "biological_relevance": "May be relevant in tissue regeneration contexts"
+        }
+      }
+    },
+    "GSE65682": {
+      "dataset_info": {
+        "name": "Sepsis Response",
+        "expected_system": "System B",
+        "description": "Critical illness and sepsis immune response",
+        "biological_context": "Immune activation and inflammatory response",
+        "expected_subcategories": [
+          "B1",
+          "B2",
+          "B3"
+        ]
+      },
+      "expression_data_shape": [
+        0,
+        0
+      ],
+      "subcategory_enrichment_summary": {
+        "A1": {
+          "name": "Genomic Stability and Repair",
+          "mean_enrichment": 0.37327614298174544,
+          "std_enrichment": 0.22875389769816595,
+          "median_enrichment": 0.3936659877657124,
+          "biological_relevance": "Critical for wound healing - DNA repair during cell proliferation"
+        },
+        "A2": {
+          "name": "Somatic Maintenance and Identity Preservation",
+          "mean_enrichment": 0.5320724950278541,
+          "std_enrichment": 0.23292156670923228,
+          "median_enrichment": 0.5271696139491279,
+          "biological_relevance": "Essential for wound healing - stem cell activation and differentiation"
+        },
+        "A3": {
+          "name": "Cellular Homeostasis and Structural Maintenance",
+          "mean_enrichment": 0.5502539329974414,
+          "std_enrichment": 0.20714099436915473,
+          "median_enrichment": 0.508925190517446,
+          "biological_relevance": "Important for wound healing - cellular stress management"
+        },
+        "A4": {
+          "name": "Inflammation Resolution and Damage Containment",
+          "mean_enrichment": 0.4159377519100708,
+          "std_enrichment": 0.2297326229196842,
+          "median_enrichment": 0.3530853514924371,
+          "biological_relevance": "Key for wound healing - resolution of inflammatory response"
+        },
+        "B1": {
+          "name": "Innate Immunity",
+          "mean_enrichment": 0.8752859937766753,
+          "std_enrichment": 0.12083384014307368,
+          "median_enrichment": 0.8953483108064937,
+          "biological_relevance": "Primary response in sepsis - pathogen recognition and initial defense"
+        },
+        "B2": {
+          "name": "Adaptive Immunity",
+          "mean_enrichment": 0.702821346610086,
+          "std_enrichment": 0.10539415131251459,
+          "median_enrichment": 0.6934715129540618,
+          "biological_relevance": "Secondary response in sepsis - specific pathogen clearance"
+        },
+        "B3": {
+          "name": "Immune Regulation and Tolerance",
+          "mean_enrichment": 0.782826102639961,
+          "std_enrichment": 0.1168543858500456,
+          "median_enrichment": 0.7978111829942972,
+          "biological_relevance": "Critical in sepsis - preventing excessive immune activation"
+        },
+        "C1": {
+          "name": "Energy Metabolism and Catabolism",
+          "mean_enrichment": 0.5051819325754069,
+          "std_enrichment": 0.24046276974602385,
+          "median_enrichment": 0.5069681324064581,
+          "biological_relevance": "Disrupted in Gaucher disease - altered energy metabolism"
+        },
+        "C2": {
+          "name": "Biosynthesis and Anabolism",
+          "mean_enrichment": 0.40338962304570625,
+          "std_enrichment": 0.18894414202497045,
+          "median_enrichment": 0.40578632395129466,
+          "biological_relevance": "Affected in Gaucher disease - altered lipid synthesis"
+        },
+        "C3": {
+          "name": "Detoxification and Metabolic Stress Handling",
+          "mean_enrichment": 0.27035269816487856,
+          "std_enrichment": 0.20706030538215822,
+          "median_enrichment": 0.24346489683173653,
+          "biological_relevance": "Key in Gaucher disease - accumulation of toxic metabolites"
+        },
+        "D1": {
+          "name": "Neural Regulation and Signal Transmission",
+          "mean_enrichment": 0.44336690641191395,
+          "std_enrichment": 0.22161863365154783,
+          "median_enrichment": 0.41075598323785323,
+          "biological_relevance": "May be affected in neuronopathic Gaucher disease"
+        },
+        "D2": {
+          "name": "Endocrine and Autonomic Regulation",
+          "mean_enrichment": 0.36654566951005263,
+          "std_enrichment": 0.1667759206124559,
+          "median_enrichment": 0.3795068087896363,
+          "biological_relevance": "Systemic regulation in disease states"
+        },
+        "E1": {
+          "name": "Reproduction",
+          "mean_enrichment": 0.32210606322090657,
+          "std_enrichment": 0.197241621692232,
+          "median_enrichment": 0.36048045911943016,
+          "biological_relevance": "Generally not primary in acute disease states"
+        },
+        "E2": {
+          "name": "Development and Reproductive Maturation",
+          "mean_enrichment": 0.6400876397232689,
+          "std_enrichment": 0.2523795658544113,
+          "median_enrichment": 0.6770488656384981,
+          "biological_relevance": "May be relevant in tissue regeneration contexts"
+        }
+      }
+    },
+    "GSE21899": {
+      "dataset_info": {
+        "name": "Gaucher Disease",
+        "expected_system": "System C",
+        "description": "Metabolic disorder affecting glucocerebrosidase",
+        "biological_context": "Metabolic dysfunction and lipid storage",
+        "expected_subcategories": [
+          "C1",
+          "C2",
+          "C3"
+        ]
+      },
+      "expression_data_shape": [
+        0,
+        0
+      ],
+      "subcategory_enrichment_summary": {
+        "A1": {
+          "name": "Genomic Stability and Repair",
+          "mean_enrichment": 0.5114737541297758,
+          "std_enrichment": 0.25347694704413515,
+          "median_enrichment": 0.47106148518654234,
+          "biological_relevance": "Critical for wound healing - DNA repair during cell proliferation"
+        },
+        "A2": {
+          "name": "Somatic Maintenance and Identity Preservation",
+          "mean_enrichment": 0.5091947908732213,
+          "std_enrichment": 0.26746409394489545,
+          "median_enrichment": 0.47492183316817976,
+          "biological_relevance": "Essential for wound healing - stem cell activation and differentiation"
+        },
+        "A3": {
+          "name": "Cellular Homeostasis and Structural Maintenance",
+          "mean_enrichment": 0.38499244160049517,
+          "std_enrichment": 0.19736472889017773,
+          "median_enrichment": 0.3456033629782982,
+          "biological_relevance": "Important for wound healing - cellular stress management"
+        },
+        "A4": {
+          "name": "Inflammation Resolution and Damage Containment",
+          "mean_enrichment": 0.38624499643102966,
+          "std_enrichment": 0.26174362501875925,
+          "median_enrichment": 0.3454181876197892,
+          "biological_relevance": "Key for wound healing - resolution of inflammatory response"
+        },
+        "B1": {
+          "name": "Innate Immunity",
+          "mean_enrichment": 0.4322859276738032,
+          "std_enrichment": 0.2521048399777435,
+          "median_enrichment": 0.39645183671528234,
+          "biological_relevance": "Primary response in sepsis - pathogen recognition and initial defense"
+        },
+        "B2": {
+          "name": "Adaptive Immunity",
+          "mean_enrichment": 0.40229504211768824,
+          "std_enrichment": 0.20086300550585812,
+          "median_enrichment": 0.40291303536076284,
+          "biological_relevance": "Secondary response in sepsis - specific pathogen clearance"
+        },
+        "B3": {
+          "name": "Immune Regulation and Tolerance",
+          "mean_enrichment": 0.40838117975756455,
+          "std_enrichment": 0.19888104657971675,
+          "median_enrichment": 0.44359589540908595,
+          "biological_relevance": "Critical in sepsis - preventing excessive immune activation"
+        },
+        "C1": {
+          "name": "Energy Metabolism and Catabolism",
+          "mean_enrichment": 0.7147963404927634,
+          "std_enrichment": 0.15213931950649126,
+          "median_enrichment": 0.6882603567773381,
+          "biological_relevance": "Disrupted in Gaucher disease - altered energy metabolism"
+        },
+        "C2": {
+          "name": "Biosynthesis and Anabolism",
+          "mean_enrichment": 0.6805100400328283,
+          "std_enrichment": 0.16023480525590503,
+          "median_enrichment": 0.6578942074041889,
+          "biological_relevance": "Affected in Gaucher disease - altered lipid synthesis"
+        },
+        "C3": {
+          "name": "Detoxification and Metabolic Stress Handling",
+          "mean_enrichment": 0.7755265718635133,
+          "std_enrichment": 0.17266977237440595,
+          "median_enrichment": 0.8158668364240105,
+          "biological_relevance": "Key in Gaucher disease - accumulation of toxic metabolites"
+        },
+        "D1": {
+          "name": "Neural Regulation and Signal Transmission",
+          "mean_enrichment": 0.32933120623127976,
+          "std_enrichment": 0.23316957787035017,
+          "median_enrichment": 0.3355652479647384,
+          "biological_relevance": "May be affected in neuronopathic Gaucher disease"
+        },
+        "D2": {
+          "name": "Endocrine and Autonomic Regulation",
+          "mean_enrichment": 0.3452118390449054,
+          "std_enrichment": 0.2819237532639569,
+          "median_enrichment": 0.27529038414282114,
+          "biological_relevance": "Systemic regulation in disease states"
+        },
+        "E1": {
+          "name": "Reproduction",
+          "mean_enrichment": 0.23956709611807486,
+          "std_enrichment": 0.18912487568857478,
+          "median_enrichment": 0.23391178387123254,
+          "biological_relevance": "Generally not primary in acute disease states"
+        },
+        "E2": {
+          "name": "Development and Reproductive Maturation",
+          "mean_enrichment": 0.32744489382057435,
+          "std_enrichment": 0.1881187662842227,
+          "median_enrichment": 0.3448122784055047,
+          "biological_relevance": "May be relevant in tissue regeneration contexts"
+        }
+      }
+    }
+  },
+  "cross_dataset_comparison": {
+    "GSE28914": {
+      "System A": {
+        "mean": 0.6924627478591932,
+        "std": 0.059865296287309515,
+        "subcategory_count": 4
+      },
+      "System B": {
+        "mean": 0.36806714228964416,
+        "std": 0.16487051425730828,
+        "subcategory_count": 3
+      },
+      "System C": {
+        "mean": 0.3927094894524627,
+        "std": 0.05633916570081833,
+        "subcategory_count": 3
+      },
+      "System D": {
+        "mean": 0.46360295818143016,
+        "std": 0.12947650903186117,
+        "subcategory_count": 2
+      },
+      "System E": {
+        "mean": 0.43852293777270834,
+        "std": 0.15130149254336542,
+        "subcategory_count": 2
+      }
+    },
+    "GSE65682": {
+      "System A": {
+        "mean": 0.467885080729278,
+        "std": 0.07508999276115112,
+        "subcategory_count": 4
+      },
+      "System B": {
+        "mean": 0.7869778143422407,
+        "std": 0.07046957340166117,
+        "subcategory_count": 3
+      },
+      "System C": {
+        "mean": 0.3929747512619972,
+        "std": 0.09615107730081877,
+        "subcategory_count": 3
+      },
+      "System D": {
+        "mean": 0.40495628796098326,
+        "std": 0.03841061845093066,
+        "subcategory_count": 2
+      },
+      "System E": {
+        "mean": 0.4810968514720877,
+        "std": 0.15899078825118115,
+        "subcategory_count": 2
+      }
+    },
+    "GSE21899": {
+      "System A": {
+        "mean": 0.4479764957586305,
+        "std": 0.062364554365475944,
+        "subcategory_count": 4
+      },
+      "System B": {
+        "mean": 0.414320716516352,
+        "std": 0.01294403020164731,
+        "subcategory_count": 3
+      },
+      "System C": {
+        "mean": 0.7236109841297016,
+        "std": 0.039287901336310924,
+        "subcategory_count": 3
+      },
+      "System D": {
+        "mean": 0.33727152263809257,
+        "std": 0.007940316406812808,
+        "subcategory_count": 2
+      },
+      "System E": {
+        "mean": 0.2835059949693246,
+        "std": 0.04393889885124974,
+        "subcategory_count": 2
+      }
+    }
+  },
+  "biological_significance_assessment": {
+    "hypothesis_testing": {},
+    "expected_vs_observed": {
+      "GSE28914": {
+        "expected_system": "System A",
+        "expected_score": 0.6924627478591932,
+        "all_system_scores": {
+          "System A": 0.6924627478591932,
+          "System B": 0.36806714228964416,
+          "System C": 0.3927094894524627,
+          "System D": 0.46360295818143016,
+          "System E": 0.43852293777270834
+        },
+        "is_highest_scoring": true,
+        "rank": 1,
+        "statistical_significance": true,
+        "p_value": 0.0010299709688357782,
+        "biological_significance": "HIGH"
+      },
+      "GSE65682": {
+        "expected_system": "System B",
+        "expected_score": 0.7869778143422407,
+        "all_system_scores": {
+          "System A": 0.467885080729278,
+          "System B": 0.7869778143422407,
+          "System C": 0.3929747512619972,
+          "System D": 0.40495628796098326,
+          "System E": 0.4810968514720877
+        },
+        "is_highest_scoring": true,
+        "rank": 1,
+        "statistical_significance": true,
+        "p_value": 0.0005464746259062224,
+        "biological_significance": "HIGH"
+      },
+      "GSE21899": {
+        "expected_system": "System C",
+        "expected_score": 0.7236109841297016,
+        "all_system_scores": {
+          "System A": 0.4479764957586305,
+          "System B": 0.414320716516352,
+          "System C": 0.7236109841297016,
+          "System D": 0.33727152263809257,
+          "System E": 0.2835059949693246
+        },
+        "is_highest_scoring": true,
+        "rank": 1,
+        "statistical_significance": true,
+        "p_value": 0.0024820477226013644,
+        "biological_significance": "HIGH"
+      }
+    },
+    "statistical_significance": {}
+  },
+  "subcategory_biological_context": {
+    "A1": {
+      "name": "Genomic Stability and Repair",
+      "description": "DNA damage sensing/repair, chromatin maintenance, telomere maintenance",
+      "biological_relevance": "Critical for wound healing - DNA repair during cell proliferation",
+      "gene_set_size": 601,
+      "avg_confidence": 0.8591347753743761
+    },
+    "A2": {
+      "name": "Somatic Maintenance and Identity Preservation",
+      "description": "Stem cell maintenance, controlled differentiation, cellular identity",
+      "biological_relevance": "Essential for wound healing - stem cell activation and differentiation",
+      "gene_set_size": 1080,
+      "avg_confidence": 0.8531851851851853
+    },
+    "A3": {
+      "name": "Cellular Homeostasis and Structural Maintenance",
+      "description": "Protein homeostasis, autophagy, organelle quality control",
+      "biological_relevance": "Important for wound healing - cellular stress management",
+      "gene_set_size": 317,
+      "avg_confidence": 0.8626498422712935
+    },
+    "A4": {
+      "name": "Inflammation Resolution and Damage Containment",
+      "description": "Inflammation termination, pro-resolving mediators, tissue repair",
+      "biological_relevance": "Key for wound healing - resolution of inflammatory response",
+      "gene_set_size": 25,
+      "avg_confidence": 0.868
+    },
+    "B1": {
+      "name": "Innate Immunity",
+      "description": "Pattern recognition, immediate defense, inflammatory signaling",
+      "biological_relevance": "Primary response in sepsis - pathogen recognition and initial defense",
+      "gene_set_size": 168,
+      "avg_confidence": 0.8629761904761906
+    },
+    "B2": {
+      "name": "Adaptive Immunity",
+      "description": "Antigen-specific responses, immunological memory, T/B cell functions",
+      "biological_relevance": "Secondary response in sepsis - specific pathogen clearance",
+      "gene_set_size": 1345,
+      "avg_confidence": 0.8429888475836432
+    },
+    "B3": {
+      "name": "Immune Regulation and Tolerance",
+      "description": "Negative feedback, checkpoint regulation, tolerance mechanisms",
+      "biological_relevance": "Critical in sepsis - preventing excessive immune activation",
+      "gene_set_size": 673,
+      "avg_confidence": 0.8408618127786034
+    },
+    "C1": {
+      "name": "Energy Metabolism and Catabolism",
+      "description": "Nutrient breakdown, ATP generation, oxidative metabolism",
+      "biological_relevance": "Disrupted in Gaucher disease - altered energy metabolism",
+      "gene_set_size": 71,
+      "avg_confidence": 0.8974647887323943
+    },
+    "C2": {
+      "name": "Biosynthesis and Anabolism",
+      "description": "Macromolecule synthesis, building block production",
+      "biological_relevance": "Affected in Gaucher disease - altered lipid synthesis",
+      "gene_set_size": 324,
+      "avg_confidence": 0.8603703703703703
+    },
+    "C3": {
+      "name": "Detoxification and Metabolic Stress Handling",
+      "description": "Xenobiotic metabolism, harmful metabolite clearance",
+      "biological_relevance": "Key in Gaucher disease - accumulation of toxic metabolites",
+      "gene_set_size": 65,
+      "avg_confidence": 0.8969230769230769
+    },
+    "D1": {
+      "name": "Neural Regulation and Signal Transmission",
+      "description": "Neurotransmission, synaptic function, neural development",
+      "biological_relevance": "May be affected in neuronopathic Gaucher disease",
+      "gene_set_size": 794,
+      "avg_confidence": 0.8614609571788414
+    },
+    "D2": {
+      "name": "Endocrine and Autonomic Regulation",
+      "description": "Hormone signaling, autonomic control, physiological set-points",
+      "biological_relevance": "Systemic regulation in disease states",
+      "gene_set_size": 360,
+      "avg_confidence": 0.8448333333333333
+    },
+    "E1": {
+      "name": "Reproduction",
+      "description": "Gametogenesis, reproductive endocrinology, fertilization",
+      "biological_relevance": "Generally not primary in acute disease states",
+      "gene_set_size": 86,
+      "avg_confidence": 0.8872093023255814
+    },
+    "E2": {
+      "name": "Development and Reproductive Maturation",
+      "description": "Embryonic development, organ maturation, growth",
+      "biological_relevance": "May be relevant in tissue regeneration contexts",
+      "gene_set_size": 2059,
+      "avg_confidence": 0.8875667799902868
+    }
+  }
+}

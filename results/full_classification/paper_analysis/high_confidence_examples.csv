@@ -1,0 +1,43 @@
+ID,Name,Subcategory_Code,Subcategory_Name,Confidence_Score
+GO:0000012,single strand break repair,A1,Genomic Stability and Repair,0.9
+GO:0000018,regulation of DNA recombination,A1,Genomic Stability and Repair,0.9
+GO:0000070,mitotic sister chromatid segregation,A1,Genomic Stability and Repair,0.9
+GO:0000196,cell integrity MAPK cascade,A2,Somatic Maintenance and Identity Preservation,0.9
+GO:0000226,microtubule cytoskeleton organization,A3,Cellular Homeostasis and Structural Maintenance,0.9
+GO:0000422,autophagy of mitochondrion,A3,Cellular Homeostasis and Structural Maintenance,0.9
+GO:0000423,mitophagy,A3,Cellular Homeostasis and Structural Maintenance,0.9
+GO:0000512,lncRNA-mediated post-transcriptional gene silencing,B3,Immune Regulation and Tolerance,0.9
+GO:0000578,embryonic axis specification,E2,Development and Reproductive Maturation,0.9
+GO:0000712,resolution of meiotic recombination intermediates,A4,Inflammation Resolution and Damage Containment,0.9
+GO:0000732,DNA strand displacement,B1,Innate Immunity,0.9
+GO:0000742,karyogamy involved in conjugation with cellular fusion,E1,Reproduction,0.9
+GO:0000745,nuclear migration involved in conjugation with mutual genetic exchange,B2,Adaptive Immunity,0.9
+GO:0000751,mitotic cell cycle G1 arrest in response to pheromone,B3,Immune Regulation and Tolerance,0.9
+GO:0000753,cell morphogenesis involved in conjugation with cellular fusion,E1,Reproduction,0.9
+GO:0000760,adaptation to pheromone regulating conjugation with mutual genetic exchange,B2,Adaptive Immunity,0.9
+GO:0000902,cell morphogenesis,E2,Development and Reproductive Maturation,0.9
+GO:0000905,sporocarp development involved in asexual reproduction,E1,Reproduction,0.9
+GO:0000919,cell plate assembly,E2,Development and Reproductive Maturation,0.9
+GO:0000947,amino acid catabolic process to alcohol via Ehrlich pathway,C1,Energy Metabolism and Catabolism,0.9
+GO:0000948,amino acid catabolic process to carboxylic acid via Ehrlich pathway,C1,Energy Metabolism and Catabolism,0.9
+GO:0000949,aromatic amino acid family catabolic process to alcohol via Ehrlich pathway,C1,Energy Metabolism and Catabolism,0.9
+GO:0001192,maintenance of transcriptional fidelity during transcription elongation,B3,Immune Regulation and Tolerance,0.9
+GO:0001504,neurotransmitter uptake,D1,Neural Regulation and Signal Transmission,0.9
+GO:0001539,cilium or flagellum-dependent cell motility,B2,Adaptive Immunity,0.9
+GO:0001553,luteinization,A2,Somatic Maintenance and Identity Preservation,0.9
+GO:0001710,mesodermal cell fate commitment,A2,Somatic Maintenance and Identity Preservation,0.9
+GO:0001764,neuron migration,D1,Neural Regulation and Signal Transmission,0.9
+GO:0001794,type IIa hypersensitivity,B1,Innate Immunity,0.9
+GO:0001802,type III hypersensitivity,B1,Innate Immunity,0.9
+GO:0001841,neural tube formation,D1,Neural Regulation and Signal Transmission,0.9
+GO:0002002,regulation of angiotensin levels in blood,D2,Endocrine and Autonomic Regulation,0.9
+GO:0002017,regulation of blood volume by renal aldosterone,D2,Endocrine and Autonomic Regulation,0.9
+GO:0002138,retinoic acid biosynthetic process,C2,Biosynthesis and Anabolism,0.9
+GO:0002155,regulation of thyroid hormone receptor signaling pathway,D2,Endocrine and Autonomic Regulation,0.9
+GO:0002808,regulation of antibacterial peptide biosynthetic process,C2,Biosynthesis and Anabolism,0.9
+GO:0002809,negative regulation of antibacterial peptide biosynthetic process,C2,Biosynthesis and Anabolism,0.9
+GO:0006749,glutathione metabolic process,C3,Detoxification and Metabolic Stress Handling,0.9
+GO:0006750,glutathione biosynthetic process,C3,Detoxification and Metabolic Stress Handling,0.9
+GO:0006751,glutathione catabolic process,C3,Detoxification and Metabolic Stress Handling,0.9
+GO:0010196,nonphotochemical quenching,A4,Inflammation Resolution and Damage Containment,0.9
+GO:0016233,telomere capping,A4,Inflammation Resolution and Damage Containment,0.9

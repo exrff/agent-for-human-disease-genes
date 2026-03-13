@@ -1,0 +1,7 @@
+System,Count,Percentage,Confidence_Mean,Confidence_Std,Color_Code
+System_0,13052,50.72,0.242,0.306,#E8E8E8
+System_A,4703,18.28,0.849,0.072,#FF6B6B
+System_B,2513,9.77,0.844,0.109,#4ECDC4
+System_C,913,3.55,0.875,0.052,#45B7D1
+System_D,1906,7.41,0.862,0.050,#96CEB4
+System_E,2647,10.29,0.886,0.035,#FFEAA7

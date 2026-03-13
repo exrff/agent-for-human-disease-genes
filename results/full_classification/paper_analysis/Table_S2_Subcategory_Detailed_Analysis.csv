@@ -1,0 +1,15 @@
+Subcategory,Subcategory_Name,Parent_System,Count,Percentage,Mean_Confidence,Keyword_Match_Rate,Validation_Status,Representative_Examples,Biological_Significance
+A1,Genomic Stability and Repair,System_A,601,2.34,0.859,70.0,PASS,"single strand break repair; regulation of DNA recombination; mitotic sister chromatid segregation",Essential for maintaining genetic integrity and preventing mutations
+A2,Somatic Maintenance and Identity Preservation,System_A,1080,4.20,0.853,0.0,NEEDS_REVIEW,"cell integrity MAPK cascade; luteinization; mesodermal cell fate commitment",Critical for cellular identity maintenance and controlled differentiation
+A3,Cellular Homeostasis and Structural Maintenance,System_A,317,1.23,0.863,70.0,PASS,"microtubule cytoskeleton organization; autophagy of mitochondrion; mitophagy",Maintains cellular structure and organelle quality control
+A4,Inflammation Resolution and Damage Containment,System_A,25,0.10,0.868,40.0,PASS,"resolution of meiotic recombination intermediates; nonphotochemical quenching; telomere capping",Specialized processes for resolving inflammatory responses
+B1,Innate Immunity,System_B,168,0.65,0.863,30.0,PASS,"DNA strand displacement; type IIa hypersensitivity; type III hypersensitivity",First-line defense mechanisms against pathogens
+B2,Adaptive Immunity,System_B,1345,5.23,0.843,100.0,PASS,"nuclear migration involved in conjugation; adaptation to pheromone; cilium-dependent cell motility",Antigen-specific immune responses with memory formation
+B3,Immune Regulation and Tolerance,System_B,673,2.62,0.841,50.0,PASS,"lncRNA-mediated gene silencing; mitotic G1 arrest; transcriptional fidelity maintenance",Negative regulation and tolerance mechanisms
+C1,Energy Metabolism and Catabolism,System_C,71,0.28,0.897,10.0,NEEDS_REVIEW,"amino acid catabolic process via Ehrlich pathway; aromatic amino acid catabolic process",Core energy-generating metabolic pathways
+C2,Biosynthesis and Anabolism,System_C,324,1.26,0.860,100.0,PASS,"retinoic acid biosynthetic process; antibacterial peptide biosynthesis regulation",Anabolic pathways for macromolecule synthesis
+C3,Detoxification and Metabolic Stress Handling,System_C,65,0.25,0.897,60.0,PASS,"glutathione metabolic process; glutathione biosynthesis; glutathione catabolism",Specialized detoxification and stress response pathways
+D1,Neural Regulation and Signal Transmission,System_D,794,3.09,0.861,50.0,PASS,"neurotransmitter uptake; neuron migration; neural tube formation",Neural communication and signal processing
+D2,Endocrine and Autonomic Regulation,System_D,360,1.40,0.845,60.0,PASS,"regulation of angiotensin levels; renal aldosterone regulation; thyroid hormone signaling",Hormonal and autonomic nervous system regulation
+E1,Reproduction,System_E,86,0.33,0.887,90.0,PASS,"karyogamy in conjugation; cell morphogenesis in conjugation; asexual reproduction",Direct reproductive processes and gamete formation
+E2,Development and Reproductive Maturation,System_E,2059,8.00,0.888,90.0,PASS,"embryonic axis specification; cell morphogenesis; cell plate assembly",Developmental processes and reproductive maturation

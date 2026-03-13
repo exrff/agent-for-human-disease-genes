@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\visualization\result_exporter.py
+# hypothesis_version: 6.148.8
+
+[100, ' -> ', '%Y-%m-%d %H:%M:%S', '; ', 'All_Systems', 'Classification_Date', 'Confidence_Score', 'Decision_Path', 'Definition', 'File does not exist', 'Found null IDs', 'ID', 'Name', 'Namespace', 'Primary_System', 'Source', 'Subsystem', 'Version', 'average_confidence', 'classification', 'classification_batch', 'entry', 'errors', 'export_date', 'export_info', 'file_exists', 'file_size', 'metadata', 'quality_metrics', 'results', 'row_count', 'source_counts', 'source_distribution', 'system_distribution', 'temp_incremental.csv', 'total_entries', 'utf-8', 'v8.0', 'version', 'w']

@@ -1,0 +1,61 @@
+{
+  "Wound_Healing": {
+    "dataset": "Wound Healing",
+    "best_by_accuracy": {
+      "n_components": 10,
+      "accuracy": 1.0,
+      "f1_macro": 1.0,
+      "explained_var": 0.878928449314503
+    },
+    "best_by_f1": {
+      "n_components": 10,
+      "accuracy": 1.0,
+      "f1_macro": 1.0,
+      "explained_var": 0.878928449314503
+    }
+  },
+  "Sepsis": {
+    "dataset": "Sepsis",
+    "best_by_accuracy": {
+      "n_components": 10,
+      "accuracy": 0.9513664596273292,
+      "f1_macro": 0.7950671919332328,
+      "explained_var": 0.6795924009422314
+    },
+    "best_by_f1": {
+      "n_components": 200,
+      "accuracy": 0.9451397515527951,
+      "f1_macro": 0.8136866481275169,
+      "explained_var": 0.9376440502999505
+    },
+    "best_by_auc": {
+      "n_components": 100,
+      "accuracy": 0.9065062111801241,
+      "f1_macro": 0.729646956695672,
+      "auc": 0.8515438992095408,
+      "explained_var": 0.8839777976953028
+    }
+  },
+  "Gaucher": {
+    "dataset": "Gaucher",
+    "best_by_accuracy": {
+      "n_components": 5,
+      "accuracy": 1.0,
+      "f1_macro": 1.0,
+      "explained_var": 0.6687807033415538
+    },
+    "best_by_f1": {
+      "n_components": 5,
+      "accuracy": 1.0,
+      "f1_macro": 1.0,
+      "explained_var": 0.6687807033415538
+    },
+    "best_by_auc": {
+      "n_components": 5,
+      "accuracy": 1.0,
+      "f1_macro": 1.0,
+      "auc": 1.0,
+      "explained_var": 0.6687807033415538
+    }
+  }
+}

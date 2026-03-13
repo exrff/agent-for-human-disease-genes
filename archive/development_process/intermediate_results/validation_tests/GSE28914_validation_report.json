@@ -1,0 +1,80 @@
+{
+  "dataset_name": "GSE28914",
+  "dataset_info": {
+    "name": "Wound Healing Time Series",
+    "description": "伤口愈合时间序列数据",
+    "expected_systems": [
+      "System A",
+      "System B",
+      "System C"
+    ],
+    "time_points": [
+      0,
+      6,
+      12,
+      24,
+      48,
+      72
+    ]
+  },
+  "data_summary": {
+    "n_genes": 54675,
+    "n_samples": 25,
+    "sample_groups": {
+      "Treatment": 25
+    }
+  },
+  "validation_results": {
+    "biological_reasonableness": "PASS",
+    "statistical_significance": "PASS",
+    "expected_patterns": "DETECTED"
+  },
+  "recommendations": [
+    "数据集GSE28914显示了预期的生物学模式",
+    "五大系统分类在该数据集上表现良好",
+    "建议进一步分析特定系统的时间动态"
+  ],
+  "ssgsea_summary": {
+    "n_systems": 6,
+    "systems": [
+      "System A: Self-Healing & Structural Reconstruction",
+      "System 0: General Molecular Machinery",
+      "System B: Immune Defense",
+      "System E: Reproduction & Continuity",
+      "System D: Cognitive-Regulatory",
+      "System C: Energy & Metabolic Homeostasis"
+    ],
+    "score_ranges": {
+      "System A: Self-Healing & Structural Reconstruction": {
+        "min": -1.7835065692622463,
+        "max": 1.993079454549966,
+        "mean": -0.07003064975088102
+      },
+      "System 0: General Molecular Machinery": {
+        "min": -1.916539211713943,
+        "max": 2.1665102559714744,
+        "mean": 0.04120911617015095
+      },
+      "System B: Immune Defense": {
+        "min": -2.9063657387755986,
+        "max": 2.4463475646116666,
+        "mean": 0.17212542854271476
+      },
+      "System E: Reproduction & Continuity": {
+        "min": -1.565516716648102,
+        "max": 2.4198416721718745,
+        "mean": 0.22930810593077083
+      },
+      "System D: Cognitive-Regulatory": {
+        "min": -1.928919112016525,
+        "max": 0.9256082573230282,
+        "mean": -0.35399680695460506
+      },
+      "System C: Energy & Metabolic Homeostasis": {
+        "min": -2.745625518475224,
+        "max": 1.7066773254828942,
+        "mean": -0.02856800210069497
+      }
+    }
+  }
+}

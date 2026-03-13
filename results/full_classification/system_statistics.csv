@@ -1,0 +1,7 @@
+Primary_System,Count,Mean_Confidence,Std_Confidence,Percentage
+System 0: General Molecular Machinery,13052,0.242,0.306,50.72
+System A: Self-Healing & Structural Reconstruction,4703,0.849,0.072,18.28
+System B: Immune Defense,2513,0.844,0.109,9.77
+System C: Energy & Metabolic Homeostasis,913,0.875,0.052,3.55
+System D: Cognitive-Regulatory,1906,0.862,0.05,7.41
+System E: Reproduction & Continuity,2647,0.886,0.035,10.29

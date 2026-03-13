@@ -1,0 +1,33 @@
+{
+  "study_title": "Functional Classification of Biological Processes: A Five-System Framework with 14 Subcategories",
+  "dataset_size": {
+    "total_biological_processes": 25153,
+    "go_terms_classified": 25153,
+    "kegg_pathways_classified": 0
+  },
+  "classification_performance": {
+    "subcategories_identified": 14,
+    "average_classification_confidence": 0.26,
+    "high_confidence_classifications": 4,
+    "inflammation_processes_identified": 577
+  },
+  "key_findings": {
+    "most_populated_subcategory": "Endocrine and Autonomic Regulation",
+    "highest_confidence_subcategory": "Inflammation Resolution and Damage Containment",
+    "system_distribution": {
+      "System 0: General Molecular Machinery": 7427,
+      "System A: Self-Healing & Structural Reconstruction": 2958,
+      "System B: Immune Defense": 631,
+      "System C: Energy & Metabolic Homeostasis": 2858,
+      "System D: Cognitive-Regulatory": 8592,
+      "System E: Reproduction & Continuity": 2687
+    },
+    "subcategory_coverage": {
+      "system_a_subcategories": 4,
+      "system_b_subcategories": 3,
+      "system_c_subcategories": 3,
+      "system_d_subcategories": 2,
+      "system_e_subcategories": 2
+    }
+  }
+}

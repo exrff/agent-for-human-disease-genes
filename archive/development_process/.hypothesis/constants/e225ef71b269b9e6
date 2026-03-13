@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\config\__init__.py
+# hypothesis_version: 6.148.8
+
+['ClassificationRules', 'FEATURE_FLAGS', 'PROJECT_METADATA', 'SYSTEM_REQUIREMENTS', 'Settings', 'VERSION', 'check_python_version', 'get_settings', 'get_system_info', 'get_version_info', 'update_settings']

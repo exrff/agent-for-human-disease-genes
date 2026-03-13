@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\models\validation_result.py
+# hypothesis_version: 6.148.8
+
+[0.0, 0.05, 1.0, 1.5, 'ValidationResult', '_vs_', 'baseline_comparison', 'inf', 'integration_test', 'metadata', 'performance_metrics', 'semantic_coherence', 'ssgsea', 'validation_date', 'validation_type', '不显著', '性能指标:', '显著', '系统内部相似度:', '系统间相似度:', '统计显著性:']

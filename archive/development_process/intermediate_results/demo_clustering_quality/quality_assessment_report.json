@@ -1,0 +1,87 @@
+{
+  "timestamp": "2025-12-24T16:16:58.587796",
+  "system_count": 5,
+  "total_terms": 25,
+  "clustering_metrics": {
+    "silhouette_score": 0.5,
+    "calinski_harabasz_score": 0.0,
+    "davies_bouldin_score": 0.0,
+    "intra_cluster_variance": 0.0,
+    "inter_cluster_separation": 1.0,
+    "coherence_ratio": Infinity
+  },
+  "coherence_summary": {
+    "avg_intra_similarity": 0.5,
+    "avg_inter_similarity": 0.0,
+    "coherence_ratio": Infinity,
+    "validation_passed": true,
+    "clustering_quality_score": 1.0
+  },
+  "system_statistics": {
+    "System A": {
+      "term_count": 5,
+      "percentage": 20.0,
+      "intra_similarity_mean": 0.5,
+      "intra_similarity_std": 0.0,
+      "intra_similarity_median": 0.5,
+      "intra_pairs_count": 10,
+      "avg_inter_similarity": 0.0,
+      "min_inter_similarity": 0.0,
+      "max_inter_similarity": 0.0
+    },
+    "System B": {
+      "term_count": 5,
+      "percentage": 20.0,
+      "intra_similarity_mean": 0.5,
+      "intra_similarity_std": 0.0,
+      "intra_similarity_median": 0.5,
+      "intra_pairs_count": 10,
+      "avg_inter_similarity": 0.0,
+      "min_inter_similarity": 0.0,
+      "max_inter_similarity": 0.0
+    },
+    "System C": {
+      "term_count": 5,
+      "percentage": 20.0,
+      "intra_similarity_mean": 0.5,
+      "intra_similarity_std": 0.0,
+      "intra_similarity_median": 0.5,
+      "intra_pairs_count": 10,
+      "avg_inter_similarity": 0.0,
+      "min_inter_similarity": 0.0,
+      "max_inter_similarity": 0.0
+    },
+    "System D": {
+      "term_count": 5,
+      "percentage": 20.0,
+      "intra_similarity_mean": 0.5,
+      "intra_similarity_std": 0.0,
+      "intra_similarity_median": 0.5,
+      "intra_pairs_count": 10,
+      "avg_inter_similarity": 0.0,
+      "min_inter_similarity": 0.0,
+      "max_inter_similarity": 0.0
+    },
+    "System E": {
+      "term_count": 5,
+      "percentage": 20.0,
+      "intra_similarity_mean": 0.5,
+      "intra_similarity_std": 0.0,
+      "intra_similarity_median": 0.5,
+      "intra_pairs_count": 10,
+      "avg_inter_similarity": 0.0,
+      "min_inter_similarity": 0.0,
+      "max_inter_similarity": 0.0
+    }
+  },
+  "visualization_paths": [
+    "results\\demo_clustering_quality\\similarity_comparison.png",
+    "results\\demo_clustering_quality\\system_statistics.png",
+    "results\\demo_clustering_quality\\clustering_metrics_radar.png",
+    "results\\demo_clustering_quality\\similarity_heatmap.png"
+  ],
+  "recommendations": [
+    "一致性比值很高，分类质量良好，可以考虑进一步细化子系统分类",
+    "语义一致性验证通过，分类系统具有良好的生物学合理性"
+  ]
+}

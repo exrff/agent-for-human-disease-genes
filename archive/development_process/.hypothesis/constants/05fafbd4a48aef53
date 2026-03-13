@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\preprocessing\kegg_parser.py
+# hypothesis_version: 6.148.8
+
+['!', '+', 'A', 'B  ', 'C    ', 'KEGG', 'Metabolism', '^(\\d{4,5})\\s+(.+)$', '^\\d{4,5}$', 'antibody', 'antigen', 'chemokine', 'class_a', 'class_a_count', 'class_a_distribution', 'class_b', 'class_b_count', 'class_b_distribution', 'complement', 'cytokine', 'immune', 'immunity', 'immunodeficiency', 'inflammatory', 'name', 'nf-kappa', 'pathway_id', 'r', 'toll-like', 'total_pathways', 'utf-8']

@@ -1,0 +1,97 @@
+gene,pc1_loading,subcategories,systems,assignment_type
+GDF11,0.01408244593806539,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'D2_Endocrine_and_Autonomic_Regulation', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'D', 'E']",Multiple
+MARK4,0.01404710262812634,"['A3_Cellular_Homeostasis_and_Structural_Maintenance', 'B3_Immune_Regulation_and_Tolerance', 'D1_Neural_Regulation_and_Signal_Transmission']","['B', 'A', 'D']",Multiple
+VBP1,0.01397428125065596,['A3_Cellular_Homeostasis_and_Structural_Maintenance'],['A'],Single
+LGI4,0.01391271344474767,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['A', 'D', 'E']",Multiple
+BMP3,0.013894297513880974,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'E']",Multiple
+CYSLTR2,0.013892516667369155,['B2_Adaptive_Immunity'],['B'],Single
+CACNA1C,0.013886384202684085,['E2_Development_and_Reproductive_Maturation'],['E'],Single
+FREM1,0.013838305382826457,['E2_Development_and_Reproductive_Maturation'],['E'],Single
+PTPRU,0.013819274905099472,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission']","['B', 'A', 'D']",Multiple
+GPR143,0.013810129634448018,"['A3_Cellular_Homeostasis_and_Structural_Maintenance', 'B2_Adaptive_Immunity']","['B', 'A']",Multiple
+GPR156,0.013806594132659823,['B2_Adaptive_Immunity'],['B'],Single
+BARHL2,0.01379452278443108,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'D1_Neural_Regulation_and_Signal_Transmission']","['A', 'D']",Multiple
+EME1,0.013781655312594161,"['A1_Genomic_Stability_and_Repair', 'A4_Inflammation_Resolution_and_Damage_Containment']",['A'],Multiple
+SH3PXD2B,0.013780212777299267,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'E2_Development_and_Reproductive_Maturation']","['A', 'E']",Multiple
+SIRT3,0.013768379774061527,['A1_Genomic_Stability_and_Repair'],['A'],Single
+AMOTL2,0.013766942698388086,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'A3_Cellular_Homeostasis_and_Structural_Maintenance', 'B2_Adaptive_Immunity']","['B', 'A']",Multiple
+ARF6,0.013742837146344201,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'A3_Cellular_Homeostasis_and_Structural_Maintenance', 'B2_Adaptive_Immunity', 'B3_Immune_Regulation_and_Tolerance', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'D', 'E']",Multiple
+ZHX3,0.013722922892692295,['A2_Somatic_Maintenance_and_Identity_Preservation'],['A'],Single
+PCDH12,0.013720562503008253,"['B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['B', 'D', 'E']",Multiple
+ECM1,0.01370126976137283,"['B2_Adaptive_Immunity', 'B3_Immune_Regulation_and_Tolerance', 'E2_Development_and_Reproductive_Maturation']","['B', 'E']",Multiple
+LILRA4,0.013697597575769561,"['B1_Innate_Immunity', 'B2_Adaptive_Immunity', 'B3_Immune_Regulation_and_Tolerance', 'E2_Development_and_Reproductive_Maturation']","['B', 'E']",Multiple
+SENP3,0.01368033221831782,['A1_Genomic_Stability_and_Repair'],['A'],Single
+SFPQ,0.013668942688370185,"['A1_Genomic_Stability_and_Repair', 'B1_Innate_Immunity', 'D2_Endocrine_and_Autonomic_Regulation', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'D', 'E']",Multiple
+GFER,0.01366364028047795,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'E2_Development_and_Reproductive_Maturation']","['A', 'E']",Multiple
+CXXC4,0.013655471476485305,['B2_Adaptive_Immunity'],['B'],Single
+GPC2,0.013641631789250036,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'D1_Neural_Regulation_and_Signal_Transmission']","['A', 'D']",Multiple
+TBX21,0.013625211697108414,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'B3_Immune_Regulation_and_Tolerance']","['B', 'A']",Multiple
+SLC45A2,0.013596586860662957,['E2_Development_and_Reproductive_Maturation'],['E'],Single
+CABLES1,0.013578001376873436,['D1_Neural_Regulation_and_Signal_Transmission'],['D'],Single
+DLC1,0.013570417624411947,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'A3_Cellular_Homeostasis_and_Structural_Maintenance', 'D1_Neural_Regulation_and_Signal_Transmission', 'D2_Endocrine_and_Autonomic_Regulation', 'E2_Development_and_Reproductive_Maturation']","['A', 'D', 'E']",Multiple
+SNF8,0.013567541456910307,['A3_Cellular_Homeostasis_and_Structural_Maintenance'],['A'],Single
+GRIN2B,0.013551549204102377,"['B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission']","['B', 'D']",Multiple
+TRIM63,0.013547408298115725,"['B1_Innate_Immunity', 'B2_Adaptive_Immunity', 'C1_Energy_Metabolism_and_Catabolism']","['B', 'C']",Multiple
+COL4A2,0.013546517226878413,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity']","['B', 'A']",Multiple
+FOXE3,0.013542213205350304,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'E2_Development_and_Reproductive_Maturation']","['A', 'E']",Multiple
+CD84,0.013540007139666273,"['B1_Innate_Immunity', 'B2_Adaptive_Immunity', 'B3_Immune_Regulation_and_Tolerance', 'E2_Development_and_Reproductive_Maturation']","['B', 'E']",Multiple
+ARHGEF10L,0.013536551575830775,['A3_Cellular_Homeostasis_and_Structural_Maintenance'],['A'],Single
+PLK3,0.013534491028868343,"['A1_Genomic_Stability_and_Repair', 'A3_Cellular_Homeostasis_and_Structural_Maintenance', 'B3_Immune_Regulation_and_Tolerance']","['B', 'A']",Multiple
+WNT9B,0.013517760527949639,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'E']",Multiple
+PAX3,0.01351415008820275,"['A1_Genomic_Stability_and_Repair', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['A', 'D', 'E']",Multiple
+TAF5L,-0.013508835848457173,"['A1_Genomic_Stability_and_Repair', 'A2_Somatic_Maintenance_and_Identity_Preservation']",['A'],Multiple
+SCFD2,0.013507754019467803,['A3_Cellular_Homeostasis_and_Structural_Maintenance'],['A'],Single
+SLC6A16,0.013504883171622309,['D1_Neural_Regulation_and_Signal_Transmission'],['D'],Single
+SPRR1A,0.013503432335861923,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'E']",Multiple
+NPR1,0.013499456961974354,"['B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission']","['B', 'D']",Multiple
+SCN4B,0.013497634820689582,['D1_Neural_Regulation_and_Signal_Transmission'],['D'],Single
+SLC27A4,0.013493774155836231,['E2_Development_and_Reproductive_Maturation'],['E'],Single
+PFDN2,0.013482341518470452,['A3_Cellular_Homeostasis_and_Structural_Maintenance'],['A'],Single
+FBXL7,0.013481411688384022,['B2_Adaptive_Immunity'],['B'],Single
+TBXA2R,0.013481151217452633,"['B2_Adaptive_Immunity', 'C3_Detoxification_and_Metabolic_Stress_Handling']","['B', 'C']",Multiple
+AQP3,0.01347857188985989,['A2_Somatic_Maintenance_and_Identity_Preservation'],['A'],Single
+COL11A2,0.013472786370923884,['E2_Development_and_Reproductive_Maturation'],['E'],Single
+ITSN2,0.013471585277976476,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'A3_Cellular_Homeostasis_and_Structural_Maintenance']",['A'],Multiple
+CXCL3,0.01345263958582912,['B2_Adaptive_Immunity'],['B'],Single
+GPSM1,0.013452472821104393,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'A3_Cellular_Homeostasis_and_Structural_Maintenance', 'D1_Neural_Regulation_and_Signal_Transmission']","['A', 'D']",Multiple
+BDNF,0.013443762588323614,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'D', 'E']",Multiple
+INHBE,0.013442252408676629,"['B2_Adaptive_Immunity', 'E2_Development_and_Reproductive_Maturation']","['B', 'E']",Multiple
+RNF186,0.013439764206950195,"['A1_Genomic_Stability_and_Repair', 'A2_Somatic_Maintenance_and_Identity_Preservation']",['A'],Multiple
+TMPRSS3,0.013436427441723325,"['A3_Cellular_Homeostasis_and_Structural_Maintenance', 'E2_Development_and_Reproductive_Maturation']","['A', 'E']",Multiple
+MYEF2,0.013424992256728299,['A2_Somatic_Maintenance_and_Identity_Preservation'],['A'],Single
+RAD54L,0.013424981289500386,"['A1_Genomic_Stability_and_Repair', 'B1_Innate_Immunity', 'C3_Detoxification_and_Metabolic_Stress_Handling']","['B', 'C', 'A']",Multiple
+PSMC3IP,-0.013412373221625543,['A1_Genomic_Stability_and_Repair'],['A'],Single
+DSG1,0.013407242566764701,"['B2_Adaptive_Immunity', 'E1_Reproduction']","['B', 'E']",Multiple
+LGALS7,0.013397760651935996,"['A1_Genomic_Stability_and_Repair', 'B2_Adaptive_Immunity']","['B', 'A']",Multiple
+BCL2L2,0.013392235760776224,"['A1_Genomic_Stability_and_Repair', 'A2_Somatic_Maintenance_and_Identity_Preservation', 'E1_Reproduction']","['A', 'E']",Multiple
+HES2,0.013389369284659853,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'D1_Neural_Regulation_and_Signal_Transmission']","['A', 'D']",Multiple
+TRAIP,0.01338232772159598,"['A1_Genomic_Stability_and_Repair', 'B3_Immune_Regulation_and_Tolerance']","['B', 'A']",Multiple
+FOXD4L3,0.013377866944395285,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'E2_Development_and_Reproductive_Maturation']","['A', 'E']",Multiple
+NCR1,0.013376034889074483,"['B2_Adaptive_Immunity', 'B3_Immune_Regulation_and_Tolerance']",['B'],Multiple
+PLXND1,0.013375789786367519,"['B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['B', 'D', 'E']",Multiple
+MECP2,-0.013373067872309106,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'D', 'E']",Multiple
+AVPR1B,0.013369159281359101,"['B2_Adaptive_Immunity', 'C2_Biosynthesis_and_Anabolism', 'D2_Endocrine_and_Autonomic_Regulation']","['B', 'C', 'D']",Multiple
+PPP5C,0.013366872894753037,"['A1_Genomic_Stability_and_Repair', 'B2_Adaptive_Immunity']","['B', 'A']",Multiple
+TLK1,0.01335242747627776,"['A1_Genomic_Stability_and_Repair', 'A3_Cellular_Homeostasis_and_Structural_Maintenance']",['A'],Multiple
+ADRA2B,0.013348548884245777,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'E1_Reproduction']","['B', 'A', 'E']",Multiple
+EMP2,0.013344913062698685,"['A1_Genomic_Stability_and_Repair', 'A3_Cellular_Homeostasis_and_Structural_Maintenance', 'B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'E1_Reproduction']","['B', 'A', 'D', 'E']",Multiple
+SYT7,0.013338718921821598,"['A1_Genomic_Stability_and_Repair', 'B1_Innate_Immunity', 'B3_Immune_Regulation_and_Tolerance', 'D1_Neural_Regulation_and_Signal_Transmission']","['B', 'A', 'D']",Multiple
+BMP7,0.013335067610389982,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B1_Innate_Immunity', 'B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'D2_Endocrine_and_Autonomic_Regulation', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'D', 'E']",Multiple
+SMCP,0.013331580011768013,['E1_Reproduction'],['E'],Single
+NFAM1,0.013330430032468027,"['B2_Adaptive_Immunity', 'B3_Immune_Regulation_and_Tolerance']",['B'],Multiple
+PDK1,0.013322437339707489,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'C1_Energy_Metabolism_and_Catabolism']","['C', 'A']",Multiple
+SFTPB,-0.01332238234874342,['E2_Development_and_Reproductive_Maturation'],['E'],Single
+MMRN2,0.013313475356747945,['E2_Development_and_Reproductive_Maturation'],['E'],Single
+BMP5,0.013312770287284113,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'D2_Endocrine_and_Autonomic_Regulation', 'E2_Development_and_Reproductive_Maturation']","['B', 'A', 'D', 'E']",Multiple
+POF1B,0.013308791333427824,"['A3_Cellular_Homeostasis_and_Structural_Maintenance', 'E2_Development_and_Reproductive_Maturation']","['A', 'E']",Multiple
+PTGFR,0.0132994686762205,['D2_Endocrine_and_Autonomic_Regulation'],['D'],Single
+DRD2,0.013294775994269656,"['A3_Cellular_Homeostasis_and_Structural_Maintenance', 'B1_Innate_Immunity', 'B2_Adaptive_Immunity', 'B3_Immune_Regulation_and_Tolerance', 'C3_Detoxification_and_Metabolic_Stress_Handling', 'D1_Neural_Regulation_and_Signal_Transmission', 'D2_Endocrine_and_Autonomic_Regulation', 'E2_Development_and_Reproductive_Maturation']","['E', 'B', 'D', 'C', 'A']",Multiple
+GSC,0.013277565668209498,"['B2_Adaptive_Immunity', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['B', 'D', 'E']",Multiple
+NEB,0.01327486020691612,['E2_Development_and_Reproductive_Maturation'],['E'],Single
+TRIM62,0.01327213203784025,"['B1_Innate_Immunity', 'B2_Adaptive_Immunity', 'E2_Development_and_Reproductive_Maturation']","['B', 'E']",Multiple
+POU6F1,0.013271635257229119,"['D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['D', 'E']",Multiple
+ANKH,0.013268894345673984,"['A3_Cellular_Homeostasis_and_Structural_Maintenance', 'E2_Development_and_Reproductive_Maturation']","['A', 'E']",Multiple
+MAST2,0.013265579914971,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'A3_Cellular_Homeostasis_and_Structural_Maintenance']",['A'],Multiple
+EMX2,0.013264568372863893,"['A2_Somatic_Maintenance_and_Identity_Preservation', 'C3_Detoxification_and_Metabolic_Stress_Handling', 'D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['C', 'A', 'D', 'E']",Multiple
+SLC29A2,0.013257271042079815,['D1_Neural_Regulation_and_Signal_Transmission'],['D'],Single
+NDUFV2,0.013249724057064056,"['D1_Neural_Regulation_and_Signal_Transmission', 'E2_Development_and_Reproductive_Maturation']","['D', 'E']",Multiple

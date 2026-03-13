@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\models\biological_entry.py
+# hypothesis_version: 6.148.8
+
+['BiologicalEntry', 'GO', 'GO:', 'KEGG', 'KEGG:', 'ancestor_names', 'ancestors', 'biological_process', 'cellular_component', 'definition', 'hierarchy', 'id', 'metadata', 'molecular_function', 'name', 'namespace', 'obsolete', 'source']

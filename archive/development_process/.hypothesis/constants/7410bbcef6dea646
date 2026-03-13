@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\analysis\semantic_similarity.py
+# hypothesis_version: 6.148.8
+
+[0.0, 1.0, 100, 1000, 10000, 'GO:0003674', 'GO:0005575', 'GO:0008150', 'Lin方法需要信息内容，回退到深度方法', 'annotation', 'cache_size', 'dag_edges', 'dag_nodes', 'depth', 'depth_cache_size', 'ic_method', 'ic_values', 'inf', 'intrinsic', 'jaccard', 'jiang', 'lca_cache_size', 'lin', 'method', 'resnik', '基于注释数据计算信息内容...', '已清空所有缓存', '注释数据为空，回退到内在信息内容', '计算内在信息内容...']

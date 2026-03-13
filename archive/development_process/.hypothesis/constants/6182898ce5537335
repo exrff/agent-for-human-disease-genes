@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\comparison\pca_baseline.py
+# hypothesis_version: 6.148.8
+
+[0.0, 0.001, 0.01, 0.05, 0.1, 0.3, 0.5, 0.8, 0.9, 0.98, 1.5, 300, 1000, '#3498db', '#e74c3c', '*', '**', '***', '--', 'AUC', 'Accuracy', 'Macro F1', 'N/A', 'PC', 'PCA基线', 'System_A', 'System_B', 'System_C', 'System_D', 'System_E', 'Unknown', '_', 'accuracy', 'accuracy_mean', 'accuracy_std', 'auc_mean', 'auc_std', 'black', 'bold', 'bottom', 'center', 'dataset_name', 'default', 'effect_size', 'f1_macro', 'f1_macro_mean', 'f1_macro_std', 'five_system_metrics', 'k-', 'lbfgs', 'lightgray', 'macro', 'means', 'monospace', 'multinomial', 'n_classes', 'n_samples', 'ns', 'off', 'p_value', 'pca_metrics', 'right', 'roc_auc', 'round', 'sample_id', 'statistical_tests', 'stds', 't_statistic', 'test_accuracy', 'test_f1_macro', 'test_roc_auc', 'tight', 'top', 'white', 'y', '五大系统', '方法']

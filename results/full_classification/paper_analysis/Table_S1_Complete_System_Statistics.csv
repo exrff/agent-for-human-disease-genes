@@ -1,0 +1,7 @@
+System,System_Name,Total_Entries,Percentage,Mean_Confidence,Std_Confidence,High_Confidence_Count,Medium_Confidence_Count,Low_Confidence_Count,Biological_Reasonableness,Key_Functions
+System_0,General Molecular Machinery,13052,50.72,0.242,0.306,0,0,13052,Reasonable - Basic molecular mechanisms should dominate,Basic cellular processes and molecular machinery
+System_A,Self-Healing & Structural Reconstruction,4703,18.28,0.849,0.072,4703,0,0,Reasonable - Maintenance and repair processes are crucial,DNA repair; Cell cycle; Autophagy; Inflammation resolution
+System_B,Immune Defense,2513,9.77,0.844,0.109,2513,0,0,Reasonable - Immune processes are specialized,Innate immunity; Adaptive immunity; Immune regulation
+System_C,Energy & Metabolic Homeostasis,913,3.55,0.875,0.052,913,0,0,Needs review - Metabolic processes may be underestimated,Energy metabolism; Biosynthesis; Detoxification
+System_D,Cognitive-Regulatory,1906,7.41,0.862,0.050,1906,0,0,Reasonable - Regulatory processes are specialized,Neural regulation; Endocrine regulation
+System_E,Reproduction & Continuity,2647,10.29,0.886,0.035,2647,0,0,Reasonable - Reproductive processes are important,Reproduction; Development and maturation

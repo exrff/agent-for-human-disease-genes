@@ -1,0 +1,1090 @@
+{
+  "report_id": "comprehensive_20251224_165734",
+  "timestamp": "2025-12-24T16:57:34.835554",
+  "data_quality_report": {
+    "report_id": "consistency_20251224_165734",
+    "timestamp": "2025-12-24T16:57:34.835743",
+    "source_files": [
+      "data/ontology/go-basic.obo",
+      "data/ontology/br_br08901.txt"
+    ],
+    "total_entries": 48783,
+    "valid_entries": 48777,
+    "issues": [
+      {
+        "issue_type": "missing",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "unknown",
+        "field_name": "name",
+        "description": "缺少必需字段: name",
+        "suggested_fix": "为条目 unknown 添加 name 字段",
+        "metadata": {}
+      },
+      {
+        "issue_type": "missing",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "unknown",
+        "field_name": "id",
+        "description": "缺少必需字段: id",
+        "suggested_fix": "为条目 unknown 添加 id 字段",
+        "metadata": {}
+      },
+      {
+        "issue_type": "missing",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "unknown",
+        "field_name": "namespace",
+        "description": "缺少必需字段: namespace",
+        "suggested_fix": "为条目 unknown 添加 namespace 字段",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "has_ontology_root_term",
+        "field_name": "id",
+        "description": "GO ID格式不正确: has_ontology_root_term",
+        "suggested_fix": "GO ID应该是 'GO:' 后跟7位数字的格式",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "has_ontology_root_term",
+        "field_name": "namespace",
+        "description": "无效的命名空间: external",
+        "suggested_fix": "命名空间应该是: molecular_function, biological_process, cellular_component",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "negatively_regulates",
+        "field_name": "id",
+        "description": "GO ID格式不正确: negatively_regulates",
+        "suggested_fix": "GO ID应该是 'GO:' 后跟7位数字的格式",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "negatively_regulates",
+        "field_name": "namespace",
+        "description": "无效的命名空间: external",
+        "suggested_fix": "命名空间应该是: molecular_function, biological_process, cellular_component",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "part_of",
+        "field_name": "id",
+        "description": "GO ID格式不正确: part_of",
+        "suggested_fix": "GO ID应该是 'GO:' 后跟7位数字的格式",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "part_of",
+        "field_name": "namespace",
+        "description": "无效的命名空间: external",
+        "suggested_fix": "命名空间应该是: molecular_function, biological_process, cellular_component",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "positively_regulates",
+        "field_name": "id",
+        "description": "GO ID格式不正确: positively_regulates",
+        "suggested_fix": "GO ID应该是 'GO:' 后跟7位数字的格式",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "positively_regulates",
+        "field_name": "namespace",
+        "description": "无效的命名空间: external",
+        "suggested_fix": "命名空间应该是: molecular_function, biological_process, cellular_component",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "regulates",
+        "field_name": "id",
+        "description": "GO ID格式不正确: regulates",
+        "suggested_fix": "GO ID应该是 'GO:' 后跟7位数字的格式",
+        "metadata": {}
+      },
+      {
+        "issue_type": "invalid",
+        "severity": "error",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "regulates",
+        "field_name": "namespace",
+        "description": "无效的命名空间: external",
+        "suggested_fix": "命名空间应该是: molecular_function, biological_process, cellular_component",
+        "metadata": {}
+      },
+      {
+        "issue_type": "missing",
+        "severity": "warning",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "unknown",
+        "field_name": "def",
+        "description": "缺少条目定义",
+        "suggested_fix": "为条目添加详细定义",
+        "metadata": {}
+      },
+      {
+        "issue_type": "missing",
+        "severity": "warning",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "has_ontology_root_term",
+        "field_name": "def",
+        "description": "缺少条目定义",
+        "suggested_fix": "为条目添加详细定义",
+        "metadata": {}
+      },
+      {
+        "issue_type": "missing",
+        "severity": "warning",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "negatively_regulates",
+        "field_name": "def",
+        "description": "缺少条目定义",
+        "suggested_fix": "为条目添加详细定义",
+        "metadata": {}
+      },
+      {
+        "issue_type": "missing",
+        "severity": "warning",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "part_of",
+        "field_name": "def",
+        "description": "缺少条目定义",
+        "suggested_fix": "为条目添加详细定义",
+        "metadata": {}
+      },
+      {
+        "issue_type": "missing",
+        "severity": "warning",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "positively_regulates",
+        "field_name": "def",
+        "description": "缺少条目定义",
+        "suggested_fix": "为条目添加详细定义",
+        "metadata": {}
+      },
+      {
+        "issue_type": "missing",
+        "severity": "warning",
+        "source_file": "data/ontology/go-basic.obo",
+        "line_number": null,
+        "entry_id": "regulates",
+        "field_name": "def",
+        "description": "缺少条目定义",
+        "suggested_fix": "为条目添加详细定义",
+        "metadata": {}
+      },
+      {
+        "issue_type": "format",
+        "severity": "info",
+        "source_file": "data/ontology/br_br08901.txt",
+        "line_number": 652,
+        "entry_id": null,
+        "field_name": null,
+        "description": "未识别的行格式: #...",
+        "suggested_fix": "检查行是否符合KEGG层次结构格式",
+        "metadata": {}
+      },
+      {
+        "issue_type": "format",
+        "severity": "info",
+        "source_file": "data/ontology/br_br08901.txt",
+        "line_number": 653,
+        "entry_id": null,
+        "field_name": null,
+        "description": "未识别的行格式: #Last updated: November 12, 2025...",
+        "suggested_fix": "检查行是否符合KEGG层次结构格式",
+        "metadata": {}
+      },
+      {
+        "issue_type": "format",
+        "severity": "info",
+        "source_file": "data/ontology/br_br08901.txt",
+        "line_number": 654,
+        "entry_id": null,
+        "field_name": null,
+        "description": "未识别的行格式: #&raquo; Japanese version...",
+        "suggested_fix": "检查行是否符合KEGG层次结构格式",
+        "metadata": {}
+      }
+    ],
+    "statistics": {
+      "go_statistics": {
+        "namespace_distribution": {
+          "biological_process": 30817,
+          "molecular_function": 12805,
+          "cellular_component": 4574,
+          "external": 5
+        },
+        "obsolete_terms": 0,
+        "missing_definitions": 0,
+        "synonym_distribution": {
+          "0": 16262,
+          "1": 31940
+        }
+      },
+      "kegg_statistics": {
+        "class_a_distribution": {
+          "Metabolism": 192,
+          "Genetic Information Processing": 41,
+          "Environmental Information Processing": 44,
+          "Cellular Processes": 36,
+          "Organismal Systems": 94,
+          "Human Diseases": 99,
+          "Drug Development": 75
+        },
+        "class_b_distribution": {
+          "Global and overview maps": 13,
+          "Carbohydrate metabolism": 14,
+          "Energy metabolism": 8,
+          "Lipid metabolism": 17,
+          "Nucleotide metabolism": 2,
+          "Amino acid metabolism": 14,
+          "Metabolism of other amino acids": 7,
+          "Glycan biosynthesis and metabolism": 23,
+          "Metabolism of cofactors and vitamins": 12,
+          "Metabolism of terpenoids and polyketides": 21,
+          "Biosynthesis of other secondary metabolites": 31,
+          "Xenobiotics biodegradation and metabolism": 21,
+          "Chemical structure transformation maps": 9,
+          "Transcription": 3,
+          "Translation": 5,
+          "Folding, sorting and degradation": 7,
+          "Replication and repair": 7,
+          "Chromosome": 2,
+          "Information processing in viruses": 17,
+          "Membrane transport": 3,
+          "Signal transduction": 33,
+          "Signaling molecules and interaction": 8,
+          "Transport and catabolism": 10,
+          "Cell growth and death": 12,
+          "Cellular community - eukaryotes": 5,
+          "Cellular community - prokaryotes": 4,
+          "Cell motility": 5,
+          "Immune system": 22,
+          "Endocrine system": 23,
+          "Circulatory system": 3,
+          "Digestive system": 12,
+          "Excretory system": 5,
+          "Nervous system": 10,
+          "Sensory system": 5,
+          "Development and regeneration": 5,
+          "Aging": 3,
+          "Environmental adaptation": 6,
+          "Cancer: overview": 11,
+          "Cancer: specific types": 17,
+          "Infectious disease: viral": 12,
+          "Infectious disease: bacterial": 11,
+          "Infectious disease: parasitic": 6,
+          "Immune disease": 8,
+          "Neurodegenerative disease": 7,
+          "Substance dependence": 5,
+          "Cardiovascular disease": 7,
+          "Endocrine and metabolic disease": 8,
+          "Drug resistance: antimicrobial": 3,
+          "Drug resistance: antineoplastic": 4,
+          "Chronology: Antiinfectives": 11,
+          "Chronology: Antineoplastics": 5,
+          "Chronology: Nervous system agents": 11,
+          "Chronology: Other drugs": 14,
+          "Target-based classification: G protein-coupled receptors": 10,
+          "Target-based classification: Nuclear receptors": 4,
+          "Target-based classification: Ion channels": 6,
+          "Target-based classification: Transporters": 2,
+          "Target-based classification: Enzymes": 5,
+          "Structure-based classification": 3,
+          "Skeleton-based classification": 4
+        },
+        "pathway_name_length_stats": {
+          "min": 6,
+          "max": 79,
+          "avg": 27.604130808950085
+        }
+      },
+      "go_total_entries": 48202,
+      "kegg_total_entries": 581,
+      "go_valid_entries": 48196,
+      "kegg_valid_entries": 581
+    },
+    "recommendations": [
+      "KEGG通路比例较低，可能影响分类覆盖度",
+      "GO和KEGG数据质量差异较大 (差异: 77.0分)"
+    ],
+    "summary": {
+      "total_issues": 22,
+      "error_count": 13,
+      "warning_count": 6,
+      "info_count": 3,
+      "issue_types": {
+        "missing": 9,
+        "invalid": 10,
+        "format": 3
+      },
+      "data_quality_score": 22.987700633417376,
+      "completeness_rate": 0.9998770063341738
+    }
+  },
+  "coverage_report": {
+    "report_id": "coverage_20251224_165735",
+    "timestamp": "2025-12-24T16:57:35.331724",
+    "statistics": {
+      "total_entries": 75,
+      "classified_entries": 37,
+      "unclassified_entries": 38,
+      "system_distribution": {
+        "System A": 13,
+        "System B": 12,
+        "System C": 12
+      },
+      "source_distribution": {
+        "GO": {
+          "total": 50,
+          "classified": 37,
+          "unclassified": 13
+        },
+        "KEGG": {
+          "total": 25,
+          "classified": 0,
+          "unclassified": 25
+        }
+      },
+      "failure_categories": {
+        "ambiguous": 35,
+        "no_match": 3
+      },
+      "coverage_rate": 0.49333333333333335
+    },
+    "failures": [
+      {
+        "entry_id": "GO:0010966",
+        "entry_name": "regulation of phosphate transport",
+        "source": "GO",
+        "failure_reason": "可能属于 System D，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System D"
+        ],
+        "suggested_system": "System D",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:0086026",
+        "entry_name": "atrial cardiac muscle cell to AV node cell signaling",
+        "source": "GO",
+        "failure_reason": "可能属于 System D，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System D"
+        ],
+        "suggested_system": "System D",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:0060005",
+        "entry_name": "vestibular reflex",
+        "source": "GO",
+        "failure_reason": "可能属于 System D，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System D"
+        ],
+        "suggested_system": "System D",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:1904883",
+        "entry_name": "negative regulation of telomerase catalytic core complex assembly",
+        "source": "GO",
+        "failure_reason": "可能属于 System D，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System D"
+        ],
+        "suggested_system": "System D",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:2000698",
+        "entry_name": "positive regulation of epithelial cell differentiation involved in kidney development",
+        "source": "GO",
+        "failure_reason": "可能属于 System E，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System E",
+          "System D"
+        ],
+        "suggested_system": "System E",
+        "confidence_score": 0.4,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:1903344",
+        "entry_name": "regulation of protein polyglycylation",
+        "source": "GO",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C",
+          "System D"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:0032414",
+        "entry_name": "positive regulation of ion transmembrane transporter activity",
+        "source": "GO",
+        "failure_reason": "可能属于 System D，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System D"
+        ],
+        "suggested_system": "System D",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:2000736",
+        "entry_name": "regulation of stem cell differentiation",
+        "source": "GO",
+        "failure_reason": "可能属于 System D，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System D",
+          "System E"
+        ],
+        "suggested_system": "System D",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:0014828",
+        "entry_name": "distal stomach smooth muscle contraction",
+        "source": "GO",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:0048391",
+        "entry_name": "intermediate mesoderm formation",
+        "source": "GO",
+        "failure_reason": "未找到匹配的系统关键词",
+        "failure_category": "no_match",
+        "attempted_rules": [],
+        "partial_matches": [],
+        "suggested_system": null,
+        "confidence_score": 0.0,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:0055045",
+        "entry_name": "antipodal cell degeneration",
+        "source": "GO",
+        "failure_reason": "未找到匹配的系统关键词",
+        "failure_category": "no_match",
+        "attempted_rules": [],
+        "partial_matches": [],
+        "suggested_system": null,
+        "confidence_score": 0.0,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:0007341",
+        "entry_name": "penetration of zona pellucida",
+        "source": "GO",
+        "failure_reason": "未找到匹配的系统关键词",
+        "failure_category": "no_match",
+        "attempted_rules": [],
+        "partial_matches": [],
+        "suggested_system": null,
+        "confidence_score": 0.0,
+        "metadata": {}
+      },
+      {
+        "entry_id": "GO:0002584",
+        "entry_name": "negative regulation of antigen processing and presentation of peptide antigen",
+        "source": "GO",
+        "failure_reason": "可能属于 System B，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System B",
+          "System D"
+        ],
+        "suggested_system": "System B",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1100",
+        "entry_name": "Metabolic pathways",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1110",
+        "entry_name": "Biosynthesis of secondary metabolites",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.4,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1120",
+        "entry_name": "Microbial metabolism in diverse environments",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1200",
+        "entry_name": "Carbon metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1210",
+        "entry_name": "2-Oxocarboxylic acid metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1212",
+        "entry_name": "Fatty acid metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1230",
+        "entry_name": "Biosynthesis of amino acids",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.4,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1232",
+        "entry_name": "Nucleotide metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1250",
+        "entry_name": "Biosynthesis of nucleotide sugars",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.4,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1240",
+        "entry_name": "Biosynthesis of cofactors",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.4,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1220",
+        "entry_name": "Degradation of aromatic compounds",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1310",
+        "entry_name": "Nitrogen cycle",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:1320",
+        "entry_name": "Sulfur cycle",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0010",
+        "entry_name": "Glycolysis / Gluconeogenesis",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0020",
+        "entry_name": "Citrate cycle (TCA cycle)",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0030",
+        "entry_name": "Pentose phosphate pathway",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0040",
+        "entry_name": "Pentose and glucuronate interconversions",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0051",
+        "entry_name": "Fructose and mannose metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0052",
+        "entry_name": "Galactose metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0053",
+        "entry_name": "Ascorbate and aldarate metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0500",
+        "entry_name": "Starch and sucrose metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0620",
+        "entry_name": "Pyruvate metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0630",
+        "entry_name": "Glyoxylate and dicarboxylate metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0640",
+        "entry_name": "Propanoate metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      },
+      {
+        "entry_id": "KEGG:0650",
+        "entry_name": "Butanoate metabolism",
+        "source": "KEGG",
+        "failure_reason": "可能属于 System C，但未达到分类阈值",
+        "failure_category": "ambiguous",
+        "attempted_rules": [],
+        "partial_matches": [
+          "System C"
+        ],
+        "suggested_system": "System C",
+        "confidence_score": 0.2,
+        "metadata": {}
+      }
+    ],
+    "recommendations": [
+      "分类覆盖率较低 (49.3%)，建议优化分类规则",
+      "存在模糊分类条目，建议优化决策规则或增加人工审核",
+      "GO 数据源覆盖率较低 (74.0%)，建议针对性优化",
+      "KEGG 数据源覆盖率较低 (0.0%)，建议针对性优化",
+      "有 35 个条目可能通过规则优化重新分类，潜在覆盖率提升 46.7%"
+    ],
+    "detailed_analysis": {
+      "quality_issues": [],
+      "failure_analysis": {
+        "ambiguous": {
+          "count": 35,
+          "percentage": 92.10526315789474
+        },
+        "no_match": {
+          "count": 3,
+          "percentage": 7.894736842105263
+        }
+      },
+      "source_analysis": {
+        "GO": {
+          "coverage_rate": 74.0,
+          "total": 50,
+          "classified": 37,
+          "unclassified": 13
+        },
+        "KEGG": {
+          "coverage_rate": 0.0,
+          "total": 25,
+          "classified": 0,
+          "unclassified": 25
+        }
+      },
+      "system_analysis": {
+        "System A": {
+          "count": 13,
+          "percentage": 35.13513513513514
+        },
+        "System B": {
+          "count": 12,
+          "percentage": 32.432432432432435
+        },
+        "System C": {
+          "count": 12,
+          "percentage": 32.432432432432435
+        }
+      },
+      "improvement_potential": {
+        "recoverable_entries": 35,
+        "potential_coverage_improvement": 0.4666666666666667,
+        "suggested_system_distribution": {
+          "System D": 6,
+          "System E": 1,
+          "System C": 27,
+          "System B": 1
+        }
+      }
+    }
+  },
+  "integration_analysis": {
+    "quality_coverage_correlation": {
+      "data_quality_score": 22.987700633417376,
+      "coverage_rate": 49.333333333333336,
+      "correlation_strength": "positive",
+      "analysis": "数据质量(low)与覆盖率(low)呈正相关"
+    },
+    "source_specific_analysis": {
+      "GO": {
+        "data_quality_issues": 19,
+        "coverage_stats": {
+          "total": 50,
+          "classified": 37,
+          "unclassified": 13
+        },
+        "major_issues": [
+          "缺少必需字段: name",
+          "缺少必需字段: id",
+          "缺少必需字段: namespace"
+        ]
+      },
+      "KEGG": {
+        "data_quality_issues": 3,
+        "coverage_stats": {
+          "total": 25,
+          "classified": 0,
+          "unclassified": 25
+        },
+        "major_issues": []
+      }
+    },
+    "issue_priorities": [
+      {
+        "category": "low_coverage",
+        "priority": "high",
+        "count": 38,
+        "description": "覆盖率过低 (49.3%)，需要优化分类规则",
+        "impact": "high"
+      },
+      {
+        "category": "data_quality_errors",
+        "priority": "high",
+        "count": 13,
+        "description": "13 个数据质量错误需要立即修复",
+        "impact": "critical"
+      },
+      {
+        "category": "classification_failure_ambiguous",
+        "priority": "medium",
+        "count": 35,
+        "description": "35 个 ambiguous 类型的分类失败",
+        "impact": "moderate"
+      },
+      {
+        "category": "data_quality_warnings",
+        "priority": "medium",
+        "count": 6,
+        "description": "6 个数据质量警告建议修复",
+        "impact": "moderate"
+      },
+      {
+        "category": "classification_failure_no_match",
+        "priority": "medium",
+        "count": 3,
+        "description": "3 个 no_match 类型的分类失败",
+        "impact": "moderate"
+      }
+    ],
+    "improvement_impact": {
+      "potential_improvements": [
+        {
+          "type": "fix_data_quality_errors",
+          "description": "修复 13 个数据质量错误",
+          "estimated_gain": 20.0,
+          "effort": "high"
+        },
+        {
+          "type": "improve_classification_rules",
+          "description": "优化分类规则可恢复 35 个条目",
+          "estimated_gain": 46.666666666666664,
+          "effort": "medium"
+        }
+      ],
+      "estimated_quality_gain": 48.0,
+      "effort_estimation": "low"
+    }
+  },
+  "overall_recommendations": [
+    "数据质量较差，需要全面的质量改进计划",
+    "发现 2 个高优先级问题，建议优先处理",
+    "- 覆盖率过低 (49.3%)，需要优化分类规则",
+    "- 13 个数据质量错误需要立即修复",
+    "通过改进可提升质量分数约 48.0 分，预估工作量: low",
+    "GO 数据源问题较多，建议重点检查"
+  ],
+  "quality_score": 38.795080253366955
+}

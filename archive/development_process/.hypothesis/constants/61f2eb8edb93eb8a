@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\analysis\semantic_coherence_validator.py
+# hypothesis_version: 6.148.8
+
+[0.0, 1.0, 1.5, 100, '# 语义聚类一致性验证报告', '## 关键发现', '## 结论', '## 预期结果', '## 验证方法', '1. 系统内部高度同质（高相似度）', '2. 系统之间明显异质（低相似度）', '3. 分类具有良好的语义聚类一致性', 'GO:0003674', 'GO:0005575', 'GO:0008150', 'coherence_threshold', 'depth', 'ignore', 'inf', 'jaccard', 'n_system_pairs', 'n_valid_systems', 'sample_size', 'similarity_method', 'simple', 'utf-8', 'w', '⚠️ 需要注意', '✅ 通过', '已清空相似度计算缓存', '开始语义一致性验证...', '至少需要2个有效系统进行验证']

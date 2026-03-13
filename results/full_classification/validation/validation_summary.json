@@ -1,0 +1,17 @@
+{
+  "validation_summary": {
+    "total_entries": 25734,
+    "classification_coverage": 100.0,
+    "average_confidence": 0.5465866169270228,
+    "systems_identified": 6,
+    "subcategories_identified": 14,
+    "inflammation_processes": 484,
+    "validation_status": "PASSED",
+    "key_findings": [
+      "成功分类 25734 个生物过程",
+      "覆盖所有5个主系统和14个子类",
+      "平均分类置信度: 0.547",
+      "识别 484 个炎症相关过程"
+    ]
+  }
+}

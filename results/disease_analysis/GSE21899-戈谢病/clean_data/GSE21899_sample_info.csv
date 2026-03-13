@@ -1,0 +1,15 @@
+sample_id,subject_id,condition,group
+GSM544727,Subject_1,Gaucher_Disease,Gaucher
+GSM544728,Subject_2,Gaucher_Disease,Gaucher
+GSM544729,Subject_3,Gaucher_Disease,Gaucher
+GSM544730,Subject_4,Gaucher_Disease,Gaucher
+GSM544731,Subject_1,Gaucher_Disease,Gaucher
+GSM544732,Subject_2,Gaucher_Disease,Gaucher
+GSM544733,Subject_3,Gaucher_Disease,Gaucher
+GSM544734,Subject_4,Gaucher_Disease,Gaucher
+GSM544735,Subject_5,Gaucher_Disease,Gaucher
+GSM544736,Subject_1,Gaucher_Disease,Gaucher
+GSM544737,Subject_2,Gaucher_Disease,Gaucher
+GSM544738,Subject_3,Gaucher_Disease,Gaucher
+GSM544739,Subject_4,Gaucher_Disease,Gaucher
+GSM544740,Subject_5,Gaucher_Disease,Gaucher

@@ -1,0 +1,542 @@
+{
+  "validation_metadata": {
+    "validation_date": "2025-12-24T18:10:49.554447",
+    "dataset_version": "v8.0",
+    "validation_type": "comprehensive_strict_version",
+    "total_entries_validated": 25734
+  },
+  "completeness_validation": {
+    "total_entries": 25734,
+    "go_entries": 25153,
+    "kegg_entries": 581,
+    "classified_entries": 25734,
+    "unclassified_entries": 0,
+    "classification_coverage": 100.0,
+    "average_confidence": 0.5465866169270228,
+    "confidence_distribution": {
+      "high_confidence_0.8+": 14773,
+      "medium_confidence_0.5-0.8": 115,
+      "low_confidence_<0.5": 10846
+    }
+  },
+  "system_distribution_validation": {
+    "system_counts": {
+      "System 0: General Molecular Machinery": 13052,
+      "System A: Self-Healing & Structural Reconstruction": 4703,
+      "System E: Reproduction & Continuity": 2647,
+      "System B: Immune Defense": 2513,
+      "System D: Cognitive-Regulatory": 1906,
+      "System C: Energy & Metabolic Homeostasis": 913
+    },
+    "system_percentages": {
+      "System 0: General Molecular Machinery": 50.72,
+      "System A: Self-Healing & Structural Reconstruction": 18.28,
+      "System E: Reproduction & Continuity": 10.29,
+      "System B: Immune Defense": 9.77,
+      "System D: Cognitive-Regulatory": 7.41,
+      "System C: Energy & Metabolic Homeostasis": 3.55
+    },
+    "biological_reasonableness": {
+      "System 0: General Molecular Machinery": {
+        "percentage": 50.72,
+        "reasonableness": "合理",
+        "explanation": "基础分子机制层应占较大比例"
+      },
+      "System A: Self-Healing & Structural Reconstruction": {
+        "percentage": 18.28,
+        "reasonableness": "合理",
+        "explanation": "自愈重建过程应占中等比例"
+      },
+      "System E: Reproduction & Continuity": {
+        "percentage": 10.29,
+        "reasonableness": "合理",
+        "explanation": "生殖发育过程应占一定比例"
+      },
+      "System B: Immune Defense": {
+        "percentage": 9.77,
+        "reasonableness": "合理",
+        "explanation": "免疫防御过程相对专门化"
+      },
+      "System D: Cognitive-Regulatory": {
+        "percentage": 7.41,
+        "reasonableness": "合理",
+        "explanation": "调节过程相对专门化"
+      },
+      "System C: Energy & Metabolic Homeostasis": {
+        "percentage": 3.55,
+        "reasonableness": "需要检查",
+        "explanation": "代谢过程应占一定比例"
+      }
+    }
+  },
+  "subcategory_distribution_validation": {
+    "system_0": {
+      "count": 17766,
+      "percentage": 69.04,
+      "explanation": "通用分子机制层，按定义无子类"
+    },
+    "subcategory_counts": {
+      "E2": 2059,
+      "B2": 1345,
+      "A2": 1080,
+      "D1": 794,
+      "B3": 673,
+      "A1": 601,
+      "D2": 360,
+      "C2": 324,
+      "A3": 317,
+      "B1": 168,
+      "E1": 86,
+      "C1": 71,
+      "C3": 65,
+      "A4": 25
+    },
+    "subcategory_percentages": {
+      "E2": 8.0,
+      "B2": 5.23,
+      "A2": 4.2,
+      "D1": 3.09,
+      "B3": 2.62,
+      "A1": 2.34,
+      "D2": 1.4,
+      "C2": 1.26,
+      "A3": 1.23,
+      "B1": 0.65,
+      "E1": 0.33,
+      "C1": 0.28,
+      "C3": 0.25,
+      "A4": 0.1
+    },
+    "subcategory_validation": {
+      "A1": {
+        "name": "Genomic Stability and Repair",
+        "count": 601,
+        "percentage": 2.34,
+        "examples": [
+          "single strand break repair",
+          "regulation of DNA recombination",
+          "mitotic sister chromatid segregation"
+        ],
+        "average_confidence": 0.859
+      },
+      "A2": {
+        "name": "Somatic Maintenance and Identity Preservation",
+        "count": 1080,
+        "percentage": 4.2,
+        "examples": [
+          "cell integrity MAPK cascade",
+          "luteinization",
+          "mesodermal cell fate commitment"
+        ],
+        "average_confidence": 0.853
+      },
+      "A3": {
+        "name": "Cellular Homeostasis and Structural Maintenance",
+        "count": 317,
+        "percentage": 1.23,
+        "examples": [
+          "microtubule cytoskeleton organization",
+          "autophagy of mitochondrion",
+          "mitophagy"
+        ],
+        "average_confidence": 0.863
+      },
+      "A4": {
+        "name": "Inflammation Resolution and Damage Containment",
+        "count": 25,
+        "percentage": 0.1,
+        "examples": [
+          "resolution of meiotic recombination intermediates",
+          "nonphotochemical quenching",
+          "telomere capping"
+        ],
+        "average_confidence": 0.868
+      },
+      "B1": {
+        "name": "Innate Immunity",
+        "count": 168,
+        "percentage": 0.65,
+        "examples": [
+          "DNA strand displacement",
+          "type IIa hypersensitivity",
+          "type III hypersensitivity"
+        ],
+        "average_confidence": 0.863
+      },
+      "B2": {
+        "name": "Adaptive Immunity",
+        "count": 1345,
+        "percentage": 5.23,
+        "examples": [
+          "nuclear migration involved in conjugation with mutual genetic exchange",
+          "adaptation to pheromone regulating conjugation with mutual genetic exchange",
+          "cilium or flagellum-dependent cell motility"
+        ],
+        "average_confidence": 0.843
+      },
+      "B3": {
+        "name": "Immune Regulation and Tolerance",
+        "count": 673,
+        "percentage": 2.62,
+        "examples": [
+          "lncRNA-mediated post-transcriptional gene silencing",
+          "mitotic cell cycle G1 arrest in response to pheromone",
+          "maintenance of transcriptional fidelity during transcription elongation"
+        ],
+        "average_confidence": 0.841
+      },
+      "C1": {
+        "name": "Energy Metabolism and Catabolism",
+        "count": 71,
+        "percentage": 0.28,
+        "examples": [
+          "amino acid catabolic process to alcohol via Ehrlich pathway",
+          "amino acid catabolic process to carboxylic acid via Ehrlich pathway",
+          "aromatic amino acid family catabolic process to alcohol via Ehrlich pathway"
+        ],
+        "average_confidence": 0.897
+      },
+      "C2": {
+        "name": "Biosynthesis and Anabolism",
+        "count": 324,
+        "percentage": 1.26,
+        "examples": [
+          "retinoic acid biosynthetic process",
+          "regulation of antibacterial peptide biosynthetic process",
+          "negative regulation of antibacterial peptide biosynthetic process"
+        ],
+        "average_confidence": 0.86
+      },
+      "C3": {
+        "name": "Detoxification and Metabolic Stress Handling",
+        "count": 65,
+        "percentage": 0.25,
+        "examples": [
+          "glutathione metabolic process",
+          "glutathione biosynthetic process",
+          "glutathione catabolic process"
+        ],
+        "average_confidence": 0.897
+      },
+      "D1": {
+        "name": "Neural Regulation and Signal Transmission",
+        "count": 794,
+        "percentage": 3.09,
+        "examples": [
+          "neurotransmitter uptake",
+          "neuron migration",
+          "neural tube formation"
+        ],
+        "average_confidence": 0.861
+      },
+      "D2": {
+        "name": "Endocrine and Autonomic Regulation",
+        "count": 360,
+        "percentage": 1.4,
+        "examples": [
+          "regulation of angiotensin levels in blood",
+          "regulation of blood volume by renal aldosterone",
+          "regulation of thyroid hormone receptor signaling pathway"
+        ],
+        "average_confidence": 0.845
+      },
+      "E1": {
+        "name": "Reproduction",
+        "count": 86,
+        "percentage": 0.33,
+        "examples": [
+          "karyogamy involved in conjugation with cellular fusion",
+          "cell morphogenesis involved in conjugation with cellular fusion",
+          "sporocarp development involved in asexual reproduction"
+        ],
+        "average_confidence": 0.887
+      },
+      "E2": {
+        "name": "Development and Reproductive Maturation",
+        "count": 2059,
+        "percentage": 8.0,
+        "examples": [
+          "embryonic axis specification",
+          "cell morphogenesis",
+          "cell plate assembly"
+        ],
+        "average_confidence": 0.888
+      }
+    }
+  },
+  "inflammation_annotation_validation": {
+    "total_inflammation_entries": 484,
+    "inflammation_percentage": 1.88,
+    "polarity_distribution": {
+      "anti-inflammatory": 300,
+      "pro-inflammatory": 154,
+      "pro-resolving": 30
+    },
+    "polarity_validation": {
+      "anti-inflammatory": {
+        "count": 300,
+        "percentage": 1.17,
+        "examples": [
+          {
+            "ID": "GO:0039537",
+            "Name": "symbiont-mediated suppression of cytoplasmic pattern recognition receptor signaling pathway"
+          },
+          {
+            "ID": "GO:0039540",
+            "Name": "symbiont-mediated suppression of host cytoplasmic pattern recognition receptor signaling pathway via inhibition of RIG-I activity"
+          },
+          {
+            "ID": "GO:0039545",
+            "Name": "symbiont-mediated suppression of host cytoplasmic pattern recognition receptor signaling pathway via inhibition of MAVS activity"
+          }
+        ],
+        "system_distribution": {
+          "System B: Immune Defense": 280,
+          "System D: Cognitive-Regulatory": 11,
+          "System 0: General Molecular Machinery": 7,
+          "System C: Energy & Metabolic Homeostasis": 1,
+          "System A: Self-Healing & Structural Reconstruction": 1
+        }
+      },
+      "pro-inflammatory": {
+        "count": 154,
+        "percentage": 0.6,
+        "examples": [
+          {
+            "ID": "GO:0032640",
+            "Name": "tumor necrosis factor production"
+          },
+          {
+            "ID": "GO:0001794",
+            "Name": "type IIa hypersensitivity"
+          },
+          {
+            "ID": "GO:0001802",
+            "Name": "type III hypersensitivity"
+          }
+        ],
+        "system_distribution": {
+          "System B: Immune Defense": 136,
+          "System A: Self-Healing & Structural Reconstruction": 7,
+          "System 0: General Molecular Machinery": 7,
+          "System C: Energy & Metabolic Homeostasis": 2,
+          "System D: Cognitive-Regulatory": 2
+        }
+      },
+      "pro-resolving": {
+        "count": 30,
+        "percentage": 0.12,
+        "examples": [
+          {
+            "ID": "GO:0000712",
+            "Name": "resolution of meiotic recombination intermediates"
+          },
+          {
+            "ID": "GO:0010196",
+            "Name": "nonphotochemical quenching"
+          },
+          {
+            "ID": "GO:0016233",
+            "Name": "telomere capping"
+          }
+        ],
+        "system_distribution": {
+          "System A: Self-Healing & Structural Reconstruction": 28,
+          "System B: Immune Defense": 1,
+          "System C: Energy & Metabolic Homeostasis": 1
+        }
+      }
+    }
+  },
+  "classification_logic_validation": {
+    "keyword_matching_validation": {
+      "A1": {
+        "name": "Genomic Stability and Repair",
+        "total_entries": 601,
+        "keyword_match_rate": 70.0,
+        "validation_status": "通过"
+      },
+      "A2": {
+        "name": "Somatic Maintenance and Identity Preservation",
+        "total_entries": 1080,
+        "keyword_match_rate": 0.0,
+        "validation_status": "需要检查"
+      },
+      "A3": {
+        "name": "Cellular Homeostasis and Structural Maintenance",
+        "total_entries": 317,
+        "keyword_match_rate": 70.0,
+        "validation_status": "通过"
+      },
+      "A4": {
+        "name": "Inflammation Resolution and Damage Containment",
+        "total_entries": 25,
+        "keyword_match_rate": 40.0,
+        "validation_status": "通过"
+      },
+      "B1": {
+        "name": "Innate Immunity",
+        "total_entries": 168,
+        "keyword_match_rate": 30.0,
+        "validation_status": "通过"
+      },
+      "B2": {
+        "name": "Adaptive Immunity",
+        "total_entries": 1345,
+        "keyword_match_rate": 100.0,
+        "validation_status": "通过"
+      },
+      "B3": {
+        "name": "Immune Regulation and Tolerance",
+        "total_entries": 673,
+        "keyword_match_rate": 50.0,
+        "validation_status": "通过"
+      },
+      "C1": {
+        "name": "Energy Metabolism and Catabolism",
+        "total_entries": 71,
+        "keyword_match_rate": 10.0,
+        "validation_status": "需要检查"
+      },
+      "C2": {
+        "name": "Biosynthesis and Anabolism",
+        "total_entries": 324,
+        "keyword_match_rate": 100.0,
+        "validation_status": "通过"
+      },
+      "C3": {
+        "name": "Detoxification and Metabolic Stress Handling",
+        "total_entries": 65,
+        "keyword_match_rate": 60.0,
+        "validation_status": "通过"
+      },
+      "D1": {
+        "name": "Neural Regulation and Signal Transmission",
+        "total_entries": 794,
+        "keyword_match_rate": 50.0,
+        "validation_status": "通过"
+      },
+      "D2": {
+        "name": "Endocrine and Autonomic Regulation",
+        "total_entries": 360,
+        "keyword_match_rate": 60.0,
+        "validation_status": "通过"
+      },
+      "E1": {
+        "name": "Reproduction",
+        "total_entries": 86,
+        "keyword_match_rate": 90.0,
+        "validation_status": "通过"
+      },
+      "E2": {
+        "name": "Development and Reproductive Maturation",
+        "total_entries": 2059,
+        "keyword_match_rate": 90.0,
+        "validation_status": "通过"
+      }
+    },
+    "system_subcategory_consistency": {
+      "System_A": {
+        "total_entries": 4703,
+        "subcategory_distribution": {
+          "A2": 1080,
+          "A1": 601,
+          "A3": 317,
+          "A4": 25,
+          "B3": 3
+        },
+        "expected_subcategories": [
+          "A1",
+          "A2",
+          "A3",
+          "A4"
+        ],
+        "coverage": 4
+      },
+      "System_B": {
+        "total_entries": 2513,
+        "subcategory_distribution": {
+          "B2": 1345,
+          "B3": 670,
+          "B1": 168
+        },
+        "expected_subcategories": [
+          "B1",
+          "B2",
+          "B3"
+        ],
+        "coverage": 3
+      },
+      "System_C": {
+        "total_entries": 913,
+        "subcategory_distribution": {
+          "C2": 324,
+          "C1": 71,
+          "C3": 65
+        },
+        "expected_subcategories": [
+          "C1",
+          "C2",
+          "C3"
+        ],
+        "coverage": 3
+      },
+      "System_D": {
+        "total_entries": 1906,
+        "subcategory_distribution": {
+          "D1": 794,
+          "D2": 360
+        },
+        "expected_subcategories": [
+          "D1",
+          "D2"
+        ],
+        "coverage": 2
+      },
+      "System_E": {
+        "total_entries": 2647,
+        "subcategory_distribution": {
+          "E2": 2059,
+          "E1": 86
+        },
+        "expected_subcategories": [
+          "E1",
+          "E2"
+        ],
+        "coverage": 2
+      }
+    },
+    "confidence_score_analysis": {
+      "System 0: General Molecular Machinery": {
+        "mean": 0.242,
+        "std": 0.306,
+        "count": 13052
+      },
+      "System A: Self-Healing & Structural Reconstruction": {
+        "mean": 0.849,
+        "std": 0.072,
+        "count": 4703
+      },
+      "System B: Immune Defense": {
+        "mean": 0.844,
+        "std": 0.109,
+        "count": 2513
+      },
+      "System C: Energy & Metabolic Homeostasis": {
+        "mean": 0.875,
+        "std": 0.052,
+        "count": 913
+      },
+      "System D: Cognitive-Regulatory": {
+        "mean": 0.862,
+        "std": 0.05,
+        "count": 1906
+      },
+      "System E: Reproduction & Continuity": {
+        "mean": 0.886,
+        "std": 0.035,
+        "count": 2647
+      }
+    }
+  }
+}

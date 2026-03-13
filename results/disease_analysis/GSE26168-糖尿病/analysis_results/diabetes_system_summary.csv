@@ -1,0 +1,6 @@
+System,System_Name,Rank,Activation_Level,Expected_Rank,Rank_Deviation
+A,Growth & Development,1,0.2845,2,-1
+B,Immune & Defense,2,0.2554,3,-1
+C,Metabolism,3,0.246,1,2
+D,Information Processing,5,0.2429,4,1
+E,Structural & Transport,4,0.2444,5,-1

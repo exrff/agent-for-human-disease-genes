@@ -1,0 +1,77 @@
+{
+  "dataset_name": "GSE65682",
+  "dataset_info": {
+    "name": "Sepsis Response",
+    "description": "脓毒症反应数据",
+    "expected_systems": [
+      "System B",
+      "System A",
+      "System C"
+    ],
+    "groups": [
+      "Control",
+      "Sepsis"
+    ]
+  },
+  "data_summary": {
+    "n_genes": 24646,
+    "n_samples": 802,
+    "sample_groups": {
+      "Control": 401,
+      "Disease": 401
+    }
+  },
+  "validation_results": {
+    "biological_reasonableness": "PASS",
+    "statistical_significance": "PASS",
+    "expected_patterns": "DETECTED"
+  },
+  "recommendations": [
+    "数据集GSE65682显示了预期的生物学模式",
+    "五大系统分类在该数据集上表现良好",
+    "建议进一步分析特定系统的时间动态"
+  ],
+  "ssgsea_summary": {
+    "n_systems": 6,
+    "systems": [
+      "System A: Self-Healing & Structural Reconstruction",
+      "System 0: General Molecular Machinery",
+      "System B: Immune Defense",
+      "System E: Reproduction & Continuity",
+      "System D: Cognitive-Regulatory",
+      "System C: Energy & Metabolic Homeostasis"
+    ],
+    "score_ranges": {
+      "System A: Self-Healing & Structural Reconstruction": {
+        "min": -2.883638740909231,
+        "max": 2.816813139052187,
+        "mean": -0.052431663748985016
+      },
+      "System 0: General Molecular Machinery": {
+        "min": -3.029556379860892,
+        "max": 2.753575104062285,
+        "mean": -0.025652227803906125
+      },
+      "System B: Immune Defense": {
+        "min": -2.9369995193511835,
+        "max": 3.307674059834487,
+        "mean": 0.05957457835796658
+      },
+      "System E: Reproduction & Continuity": {
+        "min": -2.93161168663081,
+        "max": 3.747962199980208,
+        "mean": -0.011984622366268904
+      },
+      "System D: Cognitive-Regulatory": {
+        "min": -3.738082047809415,
+        "max": 2.796134225584299,
+        "mean": -0.020146880477498547
+      },
+      "System C: Energy & Metabolic Homeostasis": {
+        "min": -3.760312768750311,
+        "max": 3.505596737896111,
+        "mean": -0.05796307251039871
+      }
+    }
+  }
+}

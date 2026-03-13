@@ -1,0 +1,77 @@
+{
+  "dataset_name": "GSE21899",
+  "dataset_info": {
+    "name": "Gaucher Disease",
+    "description": "戈谢病数据",
+    "expected_systems": [
+      "System C",
+      "System A",
+      "System B"
+    ],
+    "groups": [
+      "Control",
+      "Gaucher"
+    ]
+  },
+  "data_summary": {
+    "n_genes": 22277,
+    "n_samples": 14,
+    "sample_groups": {
+      "Control": 7,
+      "Disease": 7
+    }
+  },
+  "validation_results": {
+    "biological_reasonableness": "PASS",
+    "statistical_significance": "PASS",
+    "expected_patterns": "DETECTED"
+  },
+  "recommendations": [
+    "数据集GSE21899显示了预期的生物学模式",
+    "五大系统分类在该数据集上表现良好",
+    "建议进一步分析特定系统的时间动态"
+  ],
+  "ssgsea_summary": {
+    "n_systems": 6,
+    "systems": [
+      "System A: Self-Healing & Structural Reconstruction",
+      "System 0: General Molecular Machinery",
+      "System B: Immune Defense",
+      "System E: Reproduction & Continuity",
+      "System D: Cognitive-Regulatory",
+      "System C: Energy & Metabolic Homeostasis"
+    ],
+    "score_ranges": {
+      "System A: Self-Healing & Structural Reconstruction": {
+        "min": -1.1471009112342714,
+        "max": 1.344680965213456,
+        "mean": -0.18692216955132915
+      },
+      "System 0: General Molecular Machinery": {
+        "min": -1.231292176814623,
+        "max": 2.476336222610986,
+        "mean": 0.5965372376534389
+      },
+      "System B: Immune Defense": {
+        "min": -1.8544784788099244,
+        "max": 0.791730508112246,
+        "mean": -0.46821740173473086
+      },
+      "System E: Reproduction & Continuity": {
+        "min": -1.7892910021529542,
+        "max": 1.3402646363140638,
+        "mean": -0.24716669981072562
+      },
+      "System D: Cognitive-Regulatory": {
+        "min": -1.712917384729433,
+        "max": 1.1451461204957392,
+        "mean": -0.6541192672904399
+      },
+      "System C: Energy & Metabolic Homeostasis": {
+        "min": -2.1055139280565247,
+        "max": 2.6126448467086303,
+        "mean": 0.04293655974684698
+      }
+    }
+  }
+}

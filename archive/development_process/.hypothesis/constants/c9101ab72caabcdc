@@ -1,0 +1,4 @@
+# file: E:\vscode\毕设\archive\core_modules\five_system_classification\src\preprocessing\go_parser.py
+# hypothesis_version: 6.148.8
+
+['!', '"([^"]*)"', ':', 'GO', 'GO:', 'GO:0003674', 'GO:0005575', 'GO:0008150', '[', '[Term]', ']', '^biological_process$', '^cellular_process$', '^metabolic_process$', '^regulation of', 'alt_id', 'alt_ids', 'ancestor_names', 'biological_process', 'cellular_component', 'dag_edges', 'dag_nodes', 'def', 'definition', 'general', 'id', 'inf', 'is_a', 'is_acyclic', 'is_obsolete', 'molecular_function', 'name', 'namespace', 'namespaces', 'obsolete', 'obsolete_terms', 'part_of', 'r', 'regulates', 'relationship', 'subset', 'subsets', 'synonym', 'synonyms', 'total_terms', 'true', 'utf-8', 'xref', 'xrefs', '构建GO DAG图...', '检测到循环依赖！']
