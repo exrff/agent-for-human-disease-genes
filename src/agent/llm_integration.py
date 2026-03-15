@@ -19,7 +19,7 @@ class LLMIntegration:
     
     def __init__(self, 
                  api_key: Optional[str] = None, 
-                 model: str = "qwen-plus",
+                 model: str = "qwen3.5-122b-a10b",
                  provider: str = "dashscope"):
         """
         初始化 LLM 集成

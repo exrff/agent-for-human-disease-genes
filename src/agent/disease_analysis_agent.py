@@ -21,7 +21,6 @@ from typing import TypedDict, Annotated, List, Dict, Any, Optional
 from pathlib import Path
 
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage
 
 
@@ -245,176 +244,454 @@ def download_dataset(state: AnalysisState) -> AnalysisState:
 
 
 def preprocess_data(state: AnalysisState) -> AnalysisState:
-    """节点3: 数据预处理"""
+    """节点3: 数据预处理 — 解析 series matrix + GPL 平台文件，生成 gene 表达矩阵"""
     state["current_step"] = "preprocess"
     state["log_messages"].append(f"[{datetime.now()}] 数据预处理...")
-    
-    # 创建模拟的表达矩阵（用于快速测试）
-    import numpy as np
-    import pandas as pd
-    
-    # 模拟 100 个基因 x 20 个样本
-    n_genes = 100
-    n_samples = 20
-    
-    gene_names = [f"Gene_{i+1}" for i in range(n_genes)]
-    sample_names = [f"Sample_{i+1}" for i in range(n_samples)]
-    
-    # 生成随机表达数据
-    expr_data = np.random.randn(n_genes, n_samples) + 10  # 均值10，标准差1
-    expr_matrix = pd.DataFrame(expr_data, index=gene_names, columns=sample_names)
-    
-    # 模拟样本元数据
-    sample_metadata = {
-        "accessions": sample_names,
-        "sample_count": n_samples,
-        "characteristics": [
-            [f"group: {'case' if i < n_samples//2 else 'control'}" for i in range(n_samples)]
-        ]
-    }
-    
-    state["expression_matrix"] = expr_matrix
-    state["sample_metadata"] = sample_metadata
-    state["processed_data_path"] = "results/processed_data"
-    
-    state["log_messages"].append(f"✓ 表达矩阵: {n_genes} 基因 x {n_samples} 样本")
-    state["log_messages"].append(f"✓ 样本分组: {n_samples//2} case, {n_samples//2} control")
-    state["log_messages"].append("预处理完成")
-    
+
+    dataset_id = state["dataset_id"]
+    data_dir = Path("data/validation_datasets")
+
+    # 找到数据集目录（支持 GSExxxx 或 GSExxxx-疾病名 两种格式）
+    dataset_dir = None
+    for d in data_dir.iterdir():
+        if d.is_dir() and d.name.startswith(dataset_id):
+            dataset_dir = d
+            break
+    if dataset_dir is None:
+        dataset_dir = data_dir / dataset_id
+
+    series_file = dataset_dir / f"{dataset_id}_series_matrix.txt.gz"
+    if not series_file.exists():
+        state["errors"].append(f"Series matrix 文件不存在: {series_file}")
+        state["log_messages"].append("❌ 找不到 series matrix 文件")
+        return state
+
+    gpl_file = _find_gpl_file(series_file, dataset_dir)
+    if gpl_file is None:
+        state["errors"].append("找不到 GPL 平台注释文件")
+        state["log_messages"].append("❌ 找不到 GPL 平台文件")
+        return state
+
+    state["log_messages"].append(f"✓ Series matrix: {series_file.name}")
+    state["log_messages"].append(f"✓ GPL 文件: {gpl_file.name}")
+
+    try:
+        # 解析 series matrix → probe 表达矩阵
+        expr_df = _parse_series_matrix(series_file)
+        state["log_messages"].append(f"✓ Probe 矩阵: {expr_df.shape[0]} probes × {expr_df.shape[1]} 样本")
+
+        # 解析 GPL → probe→gene 映射
+        mapping_df = _parse_gpl_annotation(gpl_file)
+        state["log_messages"].append(f"✓ 映射: {mapping_df['probe_id'].nunique()} probes → {mapping_df['gene_symbol'].nunique()} genes")
+
+        # probe → gene 表达矩阵（多 probe 取均值）
+        gene_expr_df = _map_probe_to_gene(expr_df, mapping_df)
+        state["log_messages"].append(f"✓ Gene 矩阵: {gene_expr_df.shape[0]} genes × {gene_expr_df.shape[1]} 样本")
+
+        state["expression_matrix"] = gene_expr_df
+        state["sample_metadata"] = _extract_sample_info(series_file)
+        state["processed_data_path"] = str(dataset_dir)
+        state["log_messages"].append("预处理完成")
+
+    except Exception as e:
+        import traceback
+        state["errors"].append(f"预处理失败: {e}")
+        state["log_messages"].append(f"❌ 预处理失败: {e}\n{traceback.format_exc()}")
+
     return state
 
 
+
+def _find_gpl_file(series_file: Path, dataset_dir: Path) -> Optional[Path]:
+    """查找 GPL 平台文件：先从 series matrix 提取平台 ID，再按优先级查找"""
+    import gzip, re
+
+    platform_id = None
+    try:
+        with gzip.open(series_file, 'rt', encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                if line.startswith('!Series_platform_id'):
+                    m = re.search(r'GPL\d+', line)
+                    if m:
+                        platform_id = m.group()
+                    break
+    except Exception:
+        pass
+
+    search_dirs = [Path("data/gpl_platforms"), dataset_dir]
+    for d in search_dirs:
+        if not d.exists():
+            continue
+        if platform_id:
+            for f in d.iterdir():
+                if f.name.startswith(platform_id) and f.suffix == '.txt':
+                    return f
+        for f in d.iterdir():
+            if f.name.startswith('GPL') and f.suffix == '.txt':
+                return f
+
+    return None
+
+
+def _parse_series_matrix(series_file: Path):
+    """解析 series matrix .txt.gz → probe × sample DataFrame"""
+    import gzip
+    import pandas as pd
+
+    with gzip.open(series_file, 'rt', encoding='utf-8', errors='ignore') as f:
+        lines = f.readlines()
+
+    # 找数据表起始行
+    data_start = None
+    for i, line in enumerate(lines):
+        if line.startswith('!series_matrix_table_begin'):
+            data_start = i + 1
+            break
+
+    if data_start is None:
+        raise ValueError("找不到 series_matrix_table_begin")
+
+    data_lines = []
+    for line in lines[data_start:]:
+        if line.startswith('!series_matrix_table_end'):
+            break
+        data_lines.append(line.strip().split('\t'))
+
+    header = [c.strip('"') for c in data_lines[0]]
+    rows = [[c.strip('"') for c in row] for row in data_lines[1:] if row]
+
+    df = pd.DataFrame(rows, columns=header)
+    df = df.set_index(df.columns[0])
+    df.index.name = 'probe_id'
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    df = df.dropna(how='all')
+    return df
+
+
+def _parse_gpl_annotation(gpl_file: Path):
+    """解析 GPL 平台文件 → DataFrame(probe_id, gene_symbol)"""
+    import pandas as pd
+
+    with open(gpl_file, 'r', encoding='utf-8', errors='ignore') as f:
+        lines = f.readlines()
+
+    # 找数据起始行（跳过 # ! 注释）
+    data_start = 0
+    for i, line in enumerate(lines):
+        if line.startswith('!platform_table_begin'):
+            data_start = i + 1
+            break
+        if not line.startswith('#') and not line.startswith('!') and line.strip():
+            data_start = i
+            break
+
+    df = pd.read_csv(gpl_file, sep='\t', skiprows=data_start,
+                     low_memory=False, on_bad_lines='skip')
+
+    # 找 probe ID 列
+    probe_col = next((c for c in df.columns if c.upper() in ('ID', 'PROBE_ID', 'PROBEID')), df.columns[0])
+
+    # 找 gene symbol 列
+    gene_col_candidates = ['Gene Symbol', 'GENE_SYMBOL', 'Gene_Symbol', 'Symbol',
+                           'SYMBOL', 'gene_symbol', 'Gene', 'GENE']
+    gene_col = next((c for c in gene_col_candidates if c in df.columns), None)
+    if gene_col is None:
+        raise ValueError(f"找不到 gene symbol 列，可用列: {list(df.columns)}")
+
+    mapping = df[[probe_col, gene_col]].copy()
+    mapping.columns = ['probe_id', 'gene_symbol']
+    mapping = mapping.dropna(subset=['gene_symbol'])
+    mapping = mapping[~mapping['gene_symbol'].astype(str).str.strip().isin(['', '---', 'null', 'NULL', 'nan'])]
+    # 多基因取第一个
+    mapping['gene_symbol'] = mapping['gene_symbol'].astype(str).str.split('///').str[0].str.split('//').str[0].str.strip()
+    mapping['probe_id'] = mapping['probe_id'].astype(str)
+    return mapping.reset_index(drop=True)
+
+
+def _map_probe_to_gene(expr_df, mapping_df):
+    """probe × sample → gene × sample（多 probe 取均值）"""
+    import pandas as pd
+
+    merged = expr_df.reset_index().merge(mapping_df, on='probe_id', how='inner')
+    merged = merged.drop('probe_id', axis=1)
+    gene_expr = merged.groupby('gene_symbol').mean()
+    return gene_expr
+
+
+def _build_subcategory_gene_sets() -> Dict[str, List[str]]:
+    """
+    从分类结果 + GO/KEGG 映射构建 14 个子类的基因集
+    复用 complete_real_ssgsea_validation.py 的逻辑
+    """
+    import json
+    import pandas as pd
+
+    classification_file = "results/full_classification/full_classification_results.csv"
+    go_mapping_file = "data/go_annotations/go_to_genes.json"
+    kegg_mapping_file = "data/kegg_mappings/kegg_to_genes.json"
+
+    df = pd.read_csv(classification_file)
+
+    with open(go_mapping_file, 'r') as f:
+        go_to_genes = json.load(f)
+
+    with open(kegg_mapping_file, 'r') as f:
+        kegg_raw = json.load(f)
+    kegg_to_genes = {pid: info['genes'] for pid, info in kegg_raw.items()}
+
+    subcategory_codes = ['A1','A2','A3','A4','B1','B2','B3','C1','C2','C3','D1','D2','E1','E2']
+    gene_sets = {}
+
+    for code in subcategory_codes:
+        subset = df[df['Subcategory_Code'] == code]
+        all_genes = set()
+
+        for term_id in subset['ID']:
+            if str(term_id).startswith('GO:') and term_id in go_to_genes:
+                all_genes.update(go_to_genes[term_id])
+            elif str(term_id).startswith('KEGG:') and term_id in kegg_to_genes:
+                all_genes.update(kegg_to_genes[term_id])
+
+        gene_sets[code] = list(all_genes)
+
+    return gene_sets
+    """查找 GPL 平台文件：先从 series matrix 提取平台 ID，再按优先级查找"""
+    import gzip, re
+
+    # 从 series matrix 提取平台 ID
+    platform_id = None
+    try:
+        with gzip.open(series_file, 'rt', encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                if line.startswith('!Series_platform_id'):
+                    m = re.search(r'GPL\d+', line)
+                    if m:
+                        platform_id = m.group()
+                    break
+    except Exception:
+        pass
+
+    # 按优先级查找文件
+    search_dirs = [Path("data/gpl_platforms"), dataset_dir]
+    for d in search_dirs:
+        if not d.exists():
+            continue
+        # 精确匹配平台 ID
+        if platform_id:
+            for f in d.iterdir():
+                if f.name.startswith(platform_id) and f.suffix == '.txt':
+                    return f
+        # 任意 GPL txt 文件
+        for f in d.iterdir():
+            if f.name.startswith('GPL') and f.suffix == '.txt':
+                return f
+
+    return None
+
+
+def _extract_sample_info(series_file: Path) -> Dict:
+    """从 series matrix 提取样本元数据"""
+    import gzip
+    info = {'accessions': [], 'titles': [], 'characteristics': []}
+    try:
+        with gzip.open(series_file, 'rt', encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                if line.startswith('!Sample_geo_accession'):
+                    info['accessions'] = [x.strip('"') for x in line.strip().split('\t')[1:]]
+                elif line.startswith('!Sample_title'):
+                    info['titles'] = [x.strip('"') for x in line.strip().split('\t')[1:]]
+                elif line.startswith('!Sample_characteristics_ch1'):
+                    chars = [x.strip('"') for x in line.strip().split('\t')[1:]]
+                    info['characteristics'].append(chars)
+                elif line.startswith('!series_matrix_table_begin'):
+                    break
+        info['sample_count'] = len(info['accessions'])
+    except Exception:
+        pass
+    return info
+
+
 def classify_genes(state: AnalysisState) -> AnalysisState:
-    """节点4: 五大系统分类"""
+    """节点4: 五大系统分类 — 统计表达矩阵中各基因在 14 个子类基因集的覆盖情况"""
     state["current_step"] = "classify"
     state["log_messages"].append(f"[{datetime.now()}] 执行五大系统分类...")
-    
-    # 模拟分类结果
-    expr_matrix = state.get("expression_matrix")
-    
-    if expr_matrix is not None:
-        n_genes = len(expr_matrix)
-    else:
-        n_genes = 100
-    
-    # 模拟分类统计
-    classification_results = {
-        "total_genes": n_genes,
-        "classified": int(n_genes * 0.95),
-        "unclassified": int(n_genes * 0.05),
-        "system_counts": {
-            "System A": int(n_genes * 0.20),
-            "System B": int(n_genes * 0.25),
-            "System C": int(n_genes * 0.20),
-            "System D": int(n_genes * 0.15),
-            "System E": int(n_genes * 0.15)
-        },
-        "subcategory_counts": {
-            "A1": int(n_genes * 0.08),
-            "A2": int(n_genes * 0.06),
-            "A3": int(n_genes * 0.04),
-            "A4": int(n_genes * 0.02),
-            "B1": int(n_genes * 0.10),
-            "B2": int(n_genes * 0.10),
-            "B3": int(n_genes * 0.05),
-            "C1": int(n_genes * 0.08),
-            "C2": int(n_genes * 0.07),
-            "C3": int(n_genes * 0.05),
-            "D1": int(n_genes * 0.08),
-            "D2": int(n_genes * 0.07),
-            "E1": int(n_genes * 0.07),
-            "E2": int(n_genes * 0.08)
+
+    gene_expr_df = state.get("expression_matrix")
+    if gene_expr_df is None:
+        state["errors"].append("无表达矩阵，跳过分类")
+        return state
+
+    try:
+        gene_sets = _build_subcategory_gene_sets()
+        expressed_genes = set(gene_expr_df.index)
+
+        subcat_to_system = {
+            'A1':'System A','A2':'System A','A3':'System A','A4':'System A',
+            'B1':'System B','B2':'System B','B3':'System B',
+            'C1':'System C','C2':'System C','C3':'System C',
+            'D1':'System D','D2':'System D',
+            'E1':'System E','E2':'System E',
         }
-    }
-    
-    state["classification_results"] = classification_results
-    
-    state["log_messages"].append(f"✓ 分类完成: {classification_results['classified']}/{n_genes} 基因")
-    state["log_messages"].append(f"✓ 系统分布: A={classification_results['system_counts']['System A']}, "
-                                 f"B={classification_results['system_counts']['System B']}, "
-                                 f"C={classification_results['system_counts']['System C']}, "
-                                 f"D={classification_results['system_counts']['System D']}, "
-                                 f"E={classification_results['system_counts']['System E']}")
-    
+
+        system_counts = {f'System {s}': 0 for s in 'ABCDE'}
+        subcategory_counts = {}
+        classified_genes = set()
+
+        for code, genes in gene_sets.items():
+            matched = expressed_genes & set(genes)
+            subcategory_counts[code] = len(matched)
+            classified_genes.update(matched)
+            system = subcat_to_system.get(code)
+            if system:
+                system_counts[system] += len(matched)
+
+        state["classification_results"] = {
+            "total_genes": len(expressed_genes),
+            "classified": len(classified_genes),
+            "unclassified": len(expressed_genes) - len(classified_genes),
+            "system_counts": system_counts,
+            "subcategory_counts": subcategory_counts,
+        }
+
+        state["log_messages"].append(
+            f"✓ 分类完成: {len(classified_genes)}/{len(expressed_genes)} 基因匹配到基因集"
+        )
+        for sys_name, cnt in system_counts.items():
+            state["log_messages"].append(f"  {sys_name}: {cnt} 基因")
+
+    except Exception as e:
+        state["errors"].append(f"分类失败: {e}")
+        state["log_messages"].append(f"❌ 分类失败: {e}")
+
     return state
 
 
 def perform_ssgsea(state: AnalysisState) -> AnalysisState:
-    """节点5: ssGSEA 评估"""
+    """节点5: ssGSEA 评估 — 自实现算法，计算全部 14 个子类得分"""
     state["current_step"] = "ssgsea"
     state["log_messages"].append(f"[{datetime.now()}] 执行 ssGSEA 分析...")
-    
-    # 模拟 14 个子类的 ssGSEA 得分
-    import numpy as np
-    
-    subcategories = {
-        'A1': 'Genomic Stability and Repair',
-        'A2': 'Somatic Maintenance and Identity Preservation',
-        'A3': 'Cellular Homeostasis and Structural Maintenance',
-        'A4': 'Inflammation Resolution and Damage Containment',
-        'B1': 'Innate Immunity',
-        'B2': 'Adaptive Immunity',
-        'B3': 'Immune Regulation and Tolerance',
-        'C1': 'Energy Metabolism and Catabolism',
-        'C2': 'Biosynthesis and Anabolism',
-        'C3': 'Detoxification and Metabolic Stress Handling',
-        'D1': 'Neural Regulation and Signal Transmission',
-        'D2': 'Endocrine and Autonomic Regulation',
-        'E1': 'Reproduction',
-        'E2': 'Development and Reproductive Maturation'
-    }
-    
-    # 根据疾病类型生成不同的得分模式
-    disease_type = state.get("disease_type", "unknown")
-    
-    ssgsea_scores = {}
-    for code, name in subcategories.items():
-        # 基础得分
-        base_score = np.random.uniform(0.3, 0.7)
-        
-        # 根据疾病类型调整得分
-        if disease_type == "cancer":
-            if code in ['A1', 'A2', 'B2', 'E2']:
-                base_score += 0.2  # 癌症相关系统得分更高
-        elif disease_type == "metabolic":
-            if code in ['C1', 'C2', 'C3', 'D2']:
-                base_score += 0.2  # 代谢相关系统得分更高
-        elif disease_type == "neurodegenerative":
-            if code in ['D1', 'A1', 'A2']:
-                base_score += 0.2  # 神经相关系统得分更高
-        
-        base_score = min(base_score, 1.0)  # 限制在 0-1 之间
-        
-        ssgsea_scores[code] = {
-            'mean_score': float(base_score),
-            'std_score': float(np.random.uniform(0.05, 0.15)),
-            'median_score': float(base_score + np.random.uniform(-0.05, 0.05)),
-            'name': name,
-            'gene_count': np.random.randint(50, 200),
-            'matched_genes': np.random.randint(30, 150)
+
+    gene_expr_df = state.get("expression_matrix")
+    if gene_expr_df is None:
+        state["errors"].append("无表达矩阵，跳过 ssGSEA")
+        return state
+
+    try:
+        import numpy as np
+
+        gene_sets = _build_subcategory_gene_sets()
+        gene_sets = {k: v for k, v in gene_sets.items() if len(v) >= 5}
+
+        subcategory_names = {
+            'A1': 'Genomic Stability and Repair',
+            'A2': 'Somatic Maintenance and Identity Preservation',
+            'A3': 'Cellular Homeostasis and Structural Maintenance',
+            'A4': 'Inflammation Resolution and Damage Containment',
+            'B1': 'Innate Immunity', 'B2': 'Adaptive Immunity',
+            'B3': 'Immune Regulation and Tolerance',
+            'C1': 'Energy Metabolism and Catabolism',
+            'C2': 'Biosynthesis and Anabolism',
+            'C3': 'Detoxification and Metabolic Stress Handling',
+            'D1': 'Neural Regulation and Signal Transmission',
+            'D2': 'Endocrine and Autonomic Regulation',
+            'E1': 'Reproduction',
+            'E2': 'Development and Reproductive Maturation',
         }
-    
-    state["ssgsea_scores"] = ssgsea_scores
-    
-    # 计算系统级得分
-    system_scores = {
-        'System A': np.mean([ssgsea_scores[f'A{i}']['mean_score'] for i in range(1, 5)]),
-        'System B': np.mean([ssgsea_scores[f'B{i}']['mean_score'] for i in range(1, 4)]),
-        'System C': np.mean([ssgsea_scores[f'C{i}']['mean_score'] for i in range(1, 4)]),
-        'System D': np.mean([ssgsea_scores[f'D{i}']['mean_score'] for i in range(1, 3)]),
-        'System E': np.mean([ssgsea_scores[f'E{i}']['mean_score'] for i in range(1, 3)])
-    }
-    
-    state["system_scores"] = system_scores
-    
-    state["log_messages"].append(f"✓ ssGSEA 完成: 14 个子类")
-    state["log_messages"].append(f"✓ 系统得分: A={system_scores['System A']:.3f}, "
-                                 f"B={system_scores['System B']:.3f}, "
-                                 f"C={system_scores['System C']:.3f}, "
-                                 f"D={system_scores['System D']:.3f}, "
-                                 f"E={system_scores['System E']:.3f}")
-    
+        subcat_to_system = {
+            'A1': 'System A', 'A2': 'System A', 'A3': 'System A', 'A4': 'System A',
+            'B1': 'System B', 'B2': 'System B', 'B3': 'System B',
+            'C1': 'System C', 'C2': 'System C', 'C3': 'System C',
+            'D1': 'System D', 'D2': 'System D',
+            'E1': 'System E', 'E2': 'System E',
+        }
+
+        available_genes = set(gene_expr_df.index)
+        ssgsea_scores = {}
+        system_score_lists: Dict[str, list] = {f'System {s}': [] for s in 'ABCDE'}
+
+        for code, gene_list in gene_sets.items():
+            matched = list(set(gene_list) & available_genes)
+            scores = _compute_ssgsea_scores(gene_expr_df, matched)
+            mean_score = float(np.mean(scores))
+
+            ssgsea_scores[code] = {
+                'mean_score': mean_score,
+                'std_score': float(np.std(scores)),
+                'median_score': float(np.median(scores)),
+                'name': subcategory_names.get(code, code),
+                'gene_count': len(gene_list),
+                'matched_genes': len(matched),
+            }
+            system = subcat_to_system.get(code)
+            if system:
+                system_score_lists[system].append(mean_score)
+
+        system_scores = {
+            sys: float(np.mean(vals)) if vals else 0.0
+            for sys, vals in system_score_lists.items()
+        }
+
+        state["ssgsea_scores"] = ssgsea_scores
+        state["system_scores"] = system_scores
+
+        state["log_messages"].append(f"✓ ssGSEA 完成: {len(ssgsea_scores)} 个子类")
+        for sys_name, score in sorted(system_scores.items()):
+            state["log_messages"].append(f"  {sys_name}: {score:.4f}")
+
+    except Exception as e:
+        import traceback
+        state["errors"].append(f"ssGSEA 失败: {e}")
+        state["log_messages"].append(f"❌ ssGSEA 失败: {e}\n{traceback.format_exc()}")
+
     return state
+
+
+def _compute_ssgsea_scores(gene_expr_df, gene_set_genes: list, alpha: float = 0.25) -> 'np.ndarray':
+    """自实现 ssGSEA：加权 KS 统计量，对每个样本计算基因集富集得分"""
+    import numpy as np
+
+    if not gene_set_genes:
+        return np.zeros(gene_expr_df.shape[1])
+
+    matched = list(set(gene_set_genes) & set(gene_expr_df.index))
+    if not matched:
+        return np.zeros(gene_expr_df.shape[1])
+
+    scores = []
+    for sample in gene_expr_df.columns:
+        expr = gene_expr_df[sample].dropna()
+        if len(expr) == 0:
+            scores.append(0.0)
+            continue
+
+        sorted_expr = expr.sort_values(ascending=False)
+        N = len(sorted_expr)
+        in_set = sorted_expr.index.isin(matched)
+        Nh = in_set.sum()
+        if Nh == 0:
+            scores.append(0.0)
+            continue
+
+        weights = np.where(in_set, np.abs(sorted_expr.values) ** alpha, 0.0)
+        weight_sum = weights[in_set].sum()
+        if weight_sum == 0:
+            scores.append(0.0)
+            continue
+
+        miss_penalty = 1.0 / (N - Nh) if N > Nh else 0.0
+        running, max_es, min_es = 0.0, 0.0, 0.0
+        for i in range(N):
+            running += weights[i] / weight_sum if in_set[i] else -miss_penalty
+            if running > max_es:
+                max_es = running
+            if running < min_es:
+                min_es = running
+
+        scores.append(max_es if abs(max_es) >= abs(min_es) else min_es)
+
+    return np.array(scores)
+
 
 
 def decide_visualization(state: AnalysisState) -> AnalysisState:
@@ -819,9 +1096,8 @@ def create_disease_analysis_graph():
     workflow.add_edge("generate_report", "export_pdf")
     workflow.add_edge("export_pdf", END)
     
-    # 编译图
-    memory = MemorySaver()
-    app = workflow.compile(checkpointer=memory)
+    # 编译图（不使用 checkpointer，避免 DataFrame 序列化问题）
+    app = workflow.compile()
     
     return app
 
@@ -865,13 +1141,11 @@ def run_disease_analysis(dataset_id: str, config: Optional[Dict] = None):
         "retry_count": 0
     }
     
-    # 运行工作流
-    thread_config = {"configurable": {"thread_id": f"analysis_{dataset_id}"}}
-    
+    # 运行工作流（无 checkpointer，直接 invoke）
     print(f"开始分析数据集: {dataset_id}")
     print("="*80)
     
-    for output in app.stream(initial_state, thread_config):
+    for output in app.stream(initial_state):
         # 打印当前步骤
         for node_name, node_output in output.items():
             print(f"\n[{node_name}] 执行完成")

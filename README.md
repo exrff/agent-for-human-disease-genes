@@ -46,7 +46,17 @@ start.bat
 # - 打开配置好的命令行
 ```
 
-### 3. 测试数据下载（可选）
+### 3. 下载 GPL 平台文件（推荐，一次性）
+
+```bash
+# 批量下载所有常用 GPL 平台文件
+python download_gpl_platforms.py --action download
+
+# 这会下载 17 个常用平台到 data/gpl_platforms/
+# 以后分析时会自动使用本地文件，不需要重复下载
+```
+
+### 4. 测试数据下载（可选）
 
 ```bash
 # 测试下载单个数据集
@@ -59,7 +69,7 @@ python test_geo_downloader.py --test check
 python test_geo_downloader.py --test batch
 ```
 
-### 4. 运行分析
+### 5. 运行分析
 
 ```bash
 # 单次自动分析（智能体自动选择数据集并下载）

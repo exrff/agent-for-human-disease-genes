@@ -17,6 +17,16 @@ from datetime import datetime
 # 添加 src 到路径
 sys.path.insert(0, str(Path(__file__).parent))
 
+# 加载 .env 文件（兼容不同运行方式）
+_env_file = Path(__file__).parent / '.env'
+if _env_file.exists():
+    with open(_env_file, 'r', encoding='utf-8') as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _, _v = _line.partition('=')
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 from src.agent.disease_selector import DiseaseSelector
 from src.agent.disease_analysis_agent import run_disease_analysis
 
