@@ -27,7 +27,7 @@ class LLMIntegration:
         Args:
             api_key: API Key，如果为 None 则从环境变量读取
             model: 模型名称
-                - DashScope: qwen-plus, qwen-turbo, qwen-max, qwen2.5-72b-instruct
+                - DashScope: qwen3.5-122b-a10b, qwen-plus, qwen-max
             provider: 提供商 ('dashscope', 'google', 'openai')
         """
         self.provider = provider.lower()
@@ -56,21 +56,10 @@ class LLMIntegration:
             raise ValueError(f"不支持的提供商: {provider}")
     
     def _init_dashscope(self):
-        """初始化阿里云百炼 DashScope"""
-        try:
-            from dashscope import Generation
-            import dashscope
-            
-            dashscope.api_key = self.api_key
-            self.dashscope = dashscope
-            self.Generation = Generation
-            
-            print(f"✅ 阿里云百炼 DashScope ({self.model}) 初始化成功")
-            
-        except ImportError:
-            raise ImportError(
-                "请安装 DashScope SDK: pip install dashscope"
-            )
+        """初始化阿里云百炼 DashScope（使用 OpenAI 兼容接口）"""
+        # 不依赖 dashscope SDK，直接用 urllib 调用兼容接口
+        self.dashscope_base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        print(f"✅ 阿里云百炼 DashScope ({self.model}) 初始化成功")
     
     def _init_google(self):
         """初始化 Google Gemini"""
@@ -104,17 +93,30 @@ class LLMIntegration:
             raise ValueError(f"不支持的提供商: {self.provider}")
     
     def _generate_dashscope(self, prompt: str) -> str:
-        """使用 DashScope 生成内容"""
-        response = self.Generation.call(
-            model=self.model,
-            prompt=prompt,
-            result_format='message'
+        """使用 DashScope OpenAI 兼容接口生成内容"""
+        import urllib.request
+        import json as _json
+
+        url = f"{self.dashscope_base_url}/chat/completions"
+        payload = _json.dumps({
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST"
         )
-        
-        if response.status_code == 200:
-            return response.output.choices[0].message.content
-        else:
-            raise Exception(f"DashScope API 调用失败: {response.code} - {response.message}")
+
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
+
+        return data["choices"][0]["message"]["content"]
     
     def _generate_google(self, prompt: str) -> str:
         """使用 Google Gemini 生成内容"""
@@ -328,38 +330,33 @@ ssGSEA 分析结果（14个子类的激活得分）：
     def select_next_dataset(self, prompt: str) -> Dict[str, Any]:
         """
         使用 LLM 选择下一个要分析的数据集
-        
-        Args:
-            prompt: 包含已分析数据集和可选数据集信息的提示
-            
-        Returns:
-            选择结果，包含 selected_dataset_id, reasoning, expected_insights
         """
         try:
             result_text = self._generate_content(prompt)
-            
+
             # 提取 JSON（可能被 markdown 代码块包裹）
             if "```json" in result_text:
                 result_text = result_text.split("```json")[1].split("```")[0].strip()
             elif "```" in result_text:
                 result_text = result_text.split("```")[1].split("```")[0].strip()
-            
+
             result = json.loads(result_text)
             result['llm_used'] = True
             result['timestamp'] = datetime.now().isoformat()
-            
+
             return result
-            
+
         except Exception as e:
+            import traceback
             print(f"⚠️  LLM 数据集选择失败: {e}")
-            # 返回空结果，让调用者使用规则引擎
+            print(traceback.format_exc())
             return {
                 'selected_dataset_id': None,
                 'reasoning': f'LLM 选择失败: {e}',
                 'llm_used': False
             }
-    
-    def generate_report_summary(self, 
+
+    def generate_report_summary(self,
                                dataset_info: Dict[str, Any],
                                analysis_results: Dict[str, Any]) -> str:
         """
@@ -393,40 +390,7 @@ ssGSEA 分析结果（14个子类的激活得分）：
         except Exception as e:
             print(f"⚠️  LLM 摘要生成失败: {e}")
             return f"本研究对 {dataset_info.get('chinese_name', 'Unknown')} 数据集进行了五大功能系统分类分析。"
-    def select_next_dataset(self, prompt: str) -> Dict[str, Any]:
-        """
-        使用 LLM 选择下一个要分析的数据集
 
-        Args:
-            prompt: 包含已分析数据集和可选数据集信息的提示
-
-        Returns:
-            选择结果，包含 selected_dataset_id, reasoning, expected_insights
-        """
-        try:
-            result_text = self._generate_content(prompt)
-
-            # 提取 JSON（可能被 markdown 代码块包裹）
-            if "```json" in result_text:
-                result_text = result_text.split("```json")[1].split("```")[0].strip()
-            elif "```" in result_text:
-                result_text = result_text.split("```")[1].split("```")[0].strip()
-
-            result = json.loads(result_text)
-            result['llm_used'] = True
-            result['timestamp'] = datetime.now().isoformat()
-
-            return result
-
-        except Exception as e:
-            print(f"⚠️  LLM 数据集选择失败: {e}")
-            # 返回空结果，让调用者使用规则引擎
-            return {
-                'selected_dataset_id': None,
-                'reasoning': f'LLM 选择失败: {e}',
-                'llm_used': False
-            }
-    
     def _prepare_score_summary(self, ssgsea_scores: Dict[str, Any]) -> str:
         """准备 ssGSEA 得分摘要"""
         if not ssgsea_scores:
@@ -539,7 +503,7 @@ def create_llm_integration(api_key: Optional[str] = None,
         # 使用阿里云百炼
         llm = create_llm_integration(
             api_key="your_dashscope_key",
-            model="qwen-plus",
+            model="qwen3.5-122b-a10b",
             provider="dashscope"
         )
         
@@ -556,10 +520,10 @@ def create_llm_integration(api_key: Optional[str] = None,
             from .config import AgentConfig
             config = AgentConfig.LLM_CONFIG
             provider = provider or config.get('provider', 'dashscope')
-            model = model or config.get('model', 'qwen-plus')
+            model = model or config.get('model', 'qwen3.5-122b-a10b')
         except:
             # 默认使用阿里云百炼
             provider = provider or 'dashscope'
-            model = model or 'qwen-plus'
+            model = model or 'qwen3.5-122b-a10b'
     
     return LLMIntegration(api_key=api_key, model=model, provider=provider)

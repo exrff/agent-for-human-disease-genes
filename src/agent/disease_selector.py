@@ -209,8 +209,7 @@ class DiseaseSelector:
                 response = llm.select_next_dataset(prompt)
                 
                 # 解析 LLM 推荐的新数据集
-                new_dataset = self._parse_new_dataset_recommendation(response)
-                
+                new_dataset = self._parse_new_dataset_recommendation(response)                
                 if new_dataset:
                     self.logger.info(f"LLM 推荐新数据集: {new_dataset['dataset_id']}")
                     self.logger.info(f"推荐理由: {new_dataset.get('selection_reasoning', '无')}")
@@ -221,7 +220,7 @@ class DiseaseSelector:
             return self.select_next_dataset_with_rules(analyzed, available)
             
         except Exception as e:
-            self.logger.error(f"LLM 选择失败: {e}")
+            self.logger.error(f"LLM 选择失败: {e}", exc_info=True)
             # 规则引擎回退：如果还有未分析的预定义数据集就选一个，否则无法推荐
             analyzed_ids = {d['dataset_id'] for d in analyzed['datasets']}
             unanalyzed = [d for d in available if d['dataset_id'] not in analyzed_ids]
@@ -455,6 +454,14 @@ class DiseaseSelector:
 3. **科学价值**: 疾病具有重要的临床意义和研究价值
 4. **系统间关联**: 能展示多个系统之间的相互作用
 5. **数据可用性**: 确保 GEO 数据库中有该数据集
+
+### 硬性要求（必须满足）
+
+- **物种**: 必须是人类（Homo sapiens）数据，taxid=9606
+- **数据类型**: 必须是基因表达谱（Expression profiling by array 或 RNA-seq），有实际的表达矩阵
+- **数据集类型**: 必须是普通 Series，**不能是 SuperSeries**（SuperSeries 只有元数据，没有表达矩阵）
+- **样本数**: 建议 20 个以上样本，有对照组和疾病组
+- **平台**: 优先 Affymetrix（GPL96, GPL570 等）或 Illumina 芯片平台
 
 ### 推荐疾病类型示例
 

@@ -185,6 +185,12 @@ def download_dataset(state: AnalysisState) -> AnalysisState:
         platform_files = [f for f in os.listdir(data_path) if f.startswith('GPL')]
         
         if os.path.exists(series_file) and len(platform_files) > 0:
+            # 验证不是 SuperSeries
+            validation = _validate_series_matrix(series_file)
+            if not validation['has_data']:
+                state["errors"].append(f"❌ {dataset_id} 是 SuperSeries 或无表达数据: {validation['reason']}")
+                state["log_messages"].append(f"❌ 数据集无效: {validation['reason']}")
+                return state
             state["raw_data_path"] = data_path
             state["log_messages"].append(f"✓ 数据已存在: {data_path}")
             state["log_messages"].append(f"  - Series matrix: {os.path.basename(series_file)}")
@@ -205,6 +211,15 @@ def download_dataset(state: AnalysisState) -> AnalysisState:
         result = download_geo_dataset(dataset_id)
         
         if result['success']:
+            # 验证下载的 series matrix 是否有实际数据（非 SuperSeries）
+            series_file_path = result['series_matrix_file']
+            validation = _validate_series_matrix(series_file_path)
+            if not validation['has_data']:
+                state["errors"].append(f"❌ {dataset_id} 是 SuperSeries 或无表达数据: {validation['reason']}")
+                state["log_messages"].append(f"❌ 数据集无效: {validation['reason']}")
+                state["log_messages"].append("⚠️  请重新选择数据集")
+                return state
+
             state["raw_data_path"] = data_path
             state["log_messages"].append(f"✅ 数据下载成功")
             state["log_messages"].append(f"  - Series matrix: {os.path.basename(result['series_matrix_file'])}")
@@ -302,6 +317,52 @@ def preprocess_data(state: AnalysisState) -> AnalysisState:
 
 
 
+def _validate_series_matrix(series_file) -> dict:
+    """
+    验证 series matrix 文件是否包含实际表达数据。
+    SuperSeries 只有元数据，没有 !series_matrix_table_begin，应被拒绝。
+    同时检查物种是否为人类。
+    """
+    import gzip
+    result = {'has_data': False, 'reason': '', 'organism': None, 'sample_count': 0}
+    try:
+        path = Path(series_file)
+        opener = gzip.open(path, 'rt', encoding='utf-8', errors='ignore') if path.suffix == '.gz' else open(path, 'r', encoding='utf-8', errors='ignore')
+        has_table = False
+        organism = None
+        is_super = False
+        sample_count = 0
+        with opener as f:
+            for line in f:
+                if '!series_matrix_table_begin' in line.lower():
+                    has_table = True
+                if '!Series_platform_taxid' in line or '!Series_sample_taxid' in line:
+                    if '10090' in line:  # 小鼠
+                        organism = 'mouse'
+                    elif '9606' in line:  # 人类
+                        organism = 'human'
+                if 'SuperSeries' in line or 'This SuperSeries' in line:
+                    is_super = True
+                if '!Series_sample_id' in line:
+                    sample_count = len(line.split()) - 1
+        result['organism'] = organism
+        result['sample_count'] = sample_count
+        if is_super and not has_table:
+            result['reason'] = 'SuperSeries（无表达矩阵，只有子系列引用）'
+            return result
+        if not has_table:
+            result['reason'] = '无 series_matrix_table_begin，可能是 SuperSeries 或 RNA-seq raw data'
+            return result
+        if organism == 'mouse':
+            result['reason'] = '小鼠数据（taxid=10090），不适用于人类疾病分析'
+            return result
+        result['has_data'] = True
+        result['reason'] = 'OK'
+    except Exception as e:
+        result['reason'] = f'验证失败: {e}'
+    return result
+
+
 def _find_gpl_file(series_file: Path, dataset_dir: Path) -> Optional[Path]:
     """查找 GPL 平台文件：先从 series matrix 提取平台 ID，再按优先级查找"""
     import gzip, re
@@ -319,15 +380,17 @@ def _find_gpl_file(series_file: Path, dataset_dir: Path) -> Optional[Path]:
         pass
 
     search_dirs = [Path("data/gpl_platforms"), dataset_dir]
+    extensions = ['.txt', '.annot.gz', '.soft.gz']
     for d in search_dirs:
         if not d.exists():
             continue
         if platform_id:
             for f in d.iterdir():
-                if f.name.startswith(platform_id) and f.suffix == '.txt':
+                if f.name.startswith(platform_id) and f.suffix in ('.txt', '.gz'):
                     return f
+        # fallback: any GPL file in the dir
         for f in d.iterdir():
-            if f.name.startswith('GPL') and f.suffix == '.txt':
+            if f.name.startswith('GPL') and f.suffix in ('.txt', '.gz'):
                 return f
 
     return None
@@ -370,10 +433,20 @@ def _parse_series_matrix(series_file: Path):
 
 
 def _parse_gpl_annotation(gpl_file: Path):
-    """解析 GPL 平台文件 → DataFrame(probe_id, gene_symbol)"""
+    """解析 GPL 平台文件 → DataFrame(probe_id, gene_symbol)
+    支持 .txt, .annot.gz, .soft.gz 格式
+    """
     import pandas as pd
+    import gzip
 
-    with open(gpl_file, 'r', encoding='utf-8', errors='ignore') as f:
+    # 读取文件内容（支持 gzip）
+    name = gpl_file.name.lower()
+    if name.endswith('.gz'):
+        opener = lambda: gzip.open(gpl_file, 'rt', encoding='utf-8', errors='ignore')
+    else:
+        opener = lambda: open(gpl_file, 'r', encoding='utf-8', errors='ignore')
+
+    with opener() as f:
         lines = f.readlines()
 
     # 找数据起始行（跳过 # ! 注释）
@@ -386,16 +459,28 @@ def _parse_gpl_annotation(gpl_file: Path):
             data_start = i
             break
 
-    df = pd.read_csv(gpl_file, sep='\t', skiprows=data_start,
-                     low_memory=False, on_bad_lines='skip')
+    # 找数据结束行
+    data_end = len(lines)
+    for i in range(data_start, len(lines)):
+        if lines[i].startswith('!platform_table_end'):
+            data_end = i
+            break
+
+    from io import StringIO
+    content = ''.join(lines[data_start:data_end])
+    df = pd.read_csv(StringIO(content), sep='\t', low_memory=False, on_bad_lines='skip')
 
     # 找 probe ID 列
     probe_col = next((c for c in df.columns if c.upper() in ('ID', 'PROBE_ID', 'PROBEID')), df.columns[0])
 
     # 找 gene symbol 列
     gene_col_candidates = ['Gene Symbol', 'GENE_SYMBOL', 'Gene_Symbol', 'Symbol',
-                           'SYMBOL', 'gene_symbol', 'Gene', 'GENE']
+                           'SYMBOL', 'gene_symbol', 'Gene', 'GENE', 'gene_assignment',
+                           'Gene Assignment', 'GENE_ASSIGNMENT']
     gene_col = next((c for c in gene_col_candidates if c in df.columns), None)
+    if gene_col is None:
+        # 找包含 gene 的列
+        gene_col = next((c for c in df.columns if 'gene' in c.lower()), None)
     if gene_col is None:
         raise ValueError(f"找不到 gene symbol 列，可用列: {list(df.columns)}")
 
@@ -403,8 +488,11 @@ def _parse_gpl_annotation(gpl_file: Path):
     mapping.columns = ['probe_id', 'gene_symbol']
     mapping = mapping.dropna(subset=['gene_symbol'])
     mapping = mapping[~mapping['gene_symbol'].astype(str).str.strip().isin(['', '---', 'null', 'NULL', 'nan'])]
-    # 多基因取第一个
-    mapping['gene_symbol'] = mapping['gene_symbol'].astype(str).str.split('///').str[0].str.split('//').str[0].str.strip()
+    # 多基因取第一个（支持 /// 和 // 分隔符，以及 gene_assignment 格式）
+    mapping['gene_symbol'] = (mapping['gene_symbol'].astype(str)
+                              .str.split('///').str[0]
+                              .str.split('//').str[0]
+                              .str.strip())
     mapping['probe_id'] = mapping['probe_id'].astype(str)
     return mapping.reset_index(drop=True)
 

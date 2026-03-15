@@ -155,7 +155,7 @@ class AgentConfig:
     # LLM 配置（用于结果解读）
     LLM_CONFIG = {
         'provider': 'dashscope',  # 使用阿里云百炼 DashScope
-        'model': 'qwen-plus',  # 可选: qwen-plus, qwen-turbo, qwen-max, qwen2.5-72b-instruct
+        'model': 'qwen3.5-122b-a10b',
         'temperature': 0.3,
         'max_tokens': 2000,
         'api_key_env': 'DASHSCOPE_API_KEY'  # 环境变量名
