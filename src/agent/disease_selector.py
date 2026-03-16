@@ -49,6 +49,8 @@ class DiseaseSelector:
                 if not dataset_dir.is_dir():
                     continue
                 summary_file = dataset_dir / "summary.json"
+                if not summary_file.exists():
+                    summary_file = dataset_dir / "analysis_summary.json"
                 if summary_file.exists():
                     try:
                         with open(summary_file, 'r', encoding='utf-8') as f:
@@ -60,7 +62,7 @@ class DiseaseSelector:
                         analyzed['datasets'].append({
                             'dataset_id': dataset_id,
                             'disease_type': summary.get('disease_type'),
-                            'analysis_date': summary.get('analysis_date'),
+                            'analysis_date': summary.get('analysis_time') or summary.get('analysis_date'),
                             'systems_activated': summary.get('top_systems', []),
                             'strategy_used': summary.get('analysis_strategy'),
                             'source': 'agent'
@@ -135,24 +137,22 @@ class DiseaseSelector:
     
     def get_available_datasets(self) -> List[Dict[str, Any]]:
         """
-        获取所有可用的数据集
-        
-        Returns:
-            可用数据集列表
+        获取所有可用的数据集（核心白名单 + geo_whitelist.csv）
         """
         from .config import AgentConfig
-        
+
         available = []
-        for dataset_id, info in AgentConfig.DATASETS.items():
+        for dataset_id, info in AgentConfig.get_all_datasets().items():
             available.append({
                 'dataset_id': dataset_id,
                 'name': info['name'],
                 'chinese_name': info['chinese_name'],
                 'disease_type': info['disease_type'],
                 'expected_systems': info['expected_systems'],
-                'description': info['description']
+                'description': info['description'],
+                'n_samples': info.get('n_samples', 0),
             })
-        
+
         return available
     
     def select_next_dataset_with_llm(
@@ -161,73 +161,45 @@ class DiseaseSelector:
         available: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """
-        使用 LLM 选择下一个最有价值的数据集
-        
-        策略：
-        1. 如果 available 中还有未分析的，优先从中选择
-        2. 如果都已分析，让 LLM 推荐新的 GEO 数据集
-        
-        Args:
-            analyzed: 已分析数据集信息
-            available: 可用数据集列表
-        
-        Returns:
-            推荐的数据集信息，如果失败返回 None
+        使用 LLM 从白名单中选择下一个最有价值的数据集。
+        LLM 只做"选哪个"的决策，不允许自由推荐白名单外的 GSE 编号。
         """
         try:
             from .llm_integration import create_llm_integration
-            
             llm = create_llm_integration()
-            
-            # 过滤掉已分析的数据集
+
             analyzed_ids = {d['dataset_id'] for d in analyzed['datasets']}
             unanalyzed = [d for d in available if d['dataset_id'] not in analyzed_ids]
-            
-            if unanalyzed:
-                # 还有预定义的数据集未分析
-                self.logger.info("从预定义数据集中选择...")
-                prompt = self._build_selection_prompt(analyzed, unanalyzed)
-                response = llm.select_next_dataset(prompt)
-                
-                selected_id = response.get('selected_dataset_id')
-                reasoning = response.get('reasoning', '')
-                
-                if selected_id:
-                    selected = next((d for d in unanalyzed if d['dataset_id'] == selected_id), None)
-                    if selected:
-                        selected['selection_reasoning'] = reasoning
-                        self.logger.info(f"LLM 推荐数据集: {selected_id}")
-                        self.logger.info(f"推荐理由: {reasoning}")
-                        return selected
-            
-            else:
-                # 所有预定义数据集都已分析，让 LLM 推荐新的
-                self.logger.info("所有预定义数据集已分析完成")
-                self.logger.info("请 LLM 推荐新的 GEO 数据集...")
-                
-                prompt = self._build_new_dataset_prompt(analyzed)
-                response = llm.select_next_dataset(prompt)
-                
-                # 解析 LLM 推荐的新数据集
-                new_dataset = self._parse_new_dataset_recommendation(response)                
-                if new_dataset:
-                    self.logger.info(f"LLM 推荐新数据集: {new_dataset['dataset_id']}")
-                    self.logger.info(f"推荐理由: {new_dataset.get('selection_reasoning', '无')}")
-                    return new_dataset
-            
-            # 如果 LLM 没有返回有效结果，使用规则引擎
-            self.logger.warning("LLM 未返回有效推荐，使用规则引擎")
+
+            if not unanalyzed:
+                self.logger.info("白名单中所有数据集均已分析完成")
+                return None
+
+            self.logger.info(f"从白名单中选择（剩余 {len(unanalyzed)} 个未分析）...")
+            prompt = self._build_selection_prompt(analyzed, unanalyzed)
+            response = llm.select_next_dataset(prompt)
+
+            selected_id = response.get('selected_dataset_id')
+            reasoning = response.get('reasoning', '')
+
+            # 严格校验：必须在白名单内
+            if selected_id:
+                selected = next((d for d in unanalyzed if d['dataset_id'] == selected_id), None)
+                if selected:
+                    selected['selection_reasoning'] = reasoning
+                    self.logger.info(f"LLM 推荐数据集: {selected_id}")
+                    self.logger.info(f"推荐理由: {reasoning}")
+                    return selected
+                else:
+                    self.logger.warning(
+                        f"LLM 推荐了白名单外的 {selected_id}，回退到规则引擎"
+                    )
+
             return self.select_next_dataset_with_rules(analyzed, available)
-            
+
         except Exception as e:
             self.logger.error(f"LLM 选择失败: {e}", exc_info=True)
-            # 规则引擎回退：如果还有未分析的预定义数据集就选一个，否则无法推荐
-            analyzed_ids = {d['dataset_id'] for d in analyzed['datasets']}
-            unanalyzed = [d for d in available if d['dataset_id'] not in analyzed_ids]
-            if unanalyzed:
-                return self.select_next_dataset_with_rules(analyzed, available)
-            self.logger.warning("LLM 不可用且无预定义数据集可选，无法推荐新数据集")
-            return None
+            return self.select_next_dataset_with_rules(analyzed, available)
 
     
     def select_next_dataset_with_rules(
@@ -305,226 +277,69 @@ class DiseaseSelector:
         
         return None
 
-    
     def _build_selection_prompt(
         self,
         analyzed: Dict[str, Any],
         unanalyzed: List[Dict[str, Any]]
     ) -> str:
-        """构建 LLM 选择提示"""
+        """构建 LLM 选择提示（只能从白名单中选）"""
         
         prompt = f"""# 疾病数据集选择任务
 
-你是一个生物医学研究助手，需要从未分析的数据集中选择下一个最有价值的进行分析。
+你是一个生物医学研究助手。请从下方**候选数据集列表**中选择下一个最有价值的进行分析。
+
+⚠️ 重要约束：你**只能**从"候选数据集"列表中选择，必须返回列表中存在的 dataset_id，不得推荐任何列表外的数据集。
 
 ## 已分析数据集 ({analyzed['total_count']} 个)
 
 """
-        
         if analyzed['datasets']:
             for d in analyzed['datasets']:
                 prompt += f"- **{d['dataset_id']}**: {d['disease_type']}, "
                 prompt += f"激活系统: {', '.join(d.get('systems_activated', []))}\n"
         else:
             prompt += "（尚未分析任何数据集）\n"
-        
-        prompt += f"""
-## 疾病类型覆盖
 
-已覆盖: {', '.join(analyzed['disease_types']) if analyzed['disease_types'] else '无'}
+        prompt += f"\n## 已覆盖疾病类型\n{', '.join(analyzed['disease_types']) if analyzed['disease_types'] else '无'}\n"
 
-## 系统激活统计
-
-"""
-        
+        prompt += "\n## 系统激活统计\n"
         if analyzed['system_coverage']:
             for system, count in sorted(analyzed['system_coverage'].items()):
                 prompt += f"- {system}: {count} 次\n"
         else:
             prompt += "（尚无统计数据）\n"
-        
-        prompt += f"""
-## 可选数据集 ({len(unanalyzed)} 个)
 
-"""
-        
+        prompt += f"\n## 候选数据集（共 {len(unanalyzed)} 个，只能从此列表选择）\n\n"
         for d in unanalyzed:
-            prompt += f"""
-### {d['dataset_id']}
-- **名称**: {d['chinese_name']} ({d['name']})
-- **疾病类型**: {d['disease_type']}
-- **预期系统**: {', '.join(d['expected_systems'])}
-- **描述**: {d['description']}
-"""
-        
+            prompt += (
+                f"- **{d['dataset_id']}** | {d['chinese_name']} ({d['name']}) | "
+                f"疾病类型: {d['disease_type']} | "
+                f"预期系统: {', '.join(d['expected_systems'])} | "
+                f"样本数: {d.get('n_samples', '?')} | "
+                f"{d['description']}\n"
+            )
+
         prompt += """
 ## 选择标准
 
-请根据以下标准选择最有价值的数据集：
-
-1. **疾病类型多样性**: 优先选择未覆盖的疾病类型
-2. **系统覆盖完整性**: 优先选择能激活未充分研究系统的数据集
-3. **科学价值**: 考虑疾病的重要性和研究意义
-4. **互补性**: 选择能与已有结果形成对比或互补的数据集
+1. 疾病类型多样性：优先选择未覆盖的疾病类型
+2. 系统覆盖完整性：优先选择能激活未充分研究系统的数据集
+3. 科学价值：考虑疾病的重要性和研究意义
+4. 互补性：与已有结果形成对比或互补
 
 ## 输出格式
 
-请以 JSON 格式返回你的选择：
-
 ```json
 {
-    "selected_dataset_id": "GSE数据集ID",
+    "selected_dataset_id": "候选列表中的某个 dataset_id",
     "reasoning": "选择理由（2-3句话）",
     "expected_insights": "预期发现（1-2句话）"
 }
 ```
 
-请直接返回 JSON，不要添加其他文字。
+只返回 JSON，不要其他内容。
 """
-        
         return prompt
-    
-    def _build_new_dataset_prompt(self, analyzed: Dict[str, Any]) -> str:
-        """构建推荐新数据集的 LLM 提示"""
-        
-        prompt = f"""# 推荐新的 GEO 疾病数据集
-
-你是一个生物医学研究助手。我们已经完成了以下疾病数据集的分析，现在需要你推荐新的、更有价值的疾病数据集进行研究。
-
-## 五大功能系统定义
-
-- **System A (稳态与修复)**: 基因组稳定性、体细胞维持、细胞稳态、炎症消解
-- **System B (免疫防御)**: 先天免疫、适应性免疫、免疫调节
-- **System C (代谢调节)**: 能量代谢、生物合成、解毒代谢
-- **System D (调节协调)**: 神经调节、内分泌调节
-- **System E (生殖发育)**: 生殖、发育
-
-## 14 个功能子类
-
-- A1: 基因组稳定性与修复
-- A2: 体细胞维持与身份保持
-- A3: 细胞稳态与结构维持
-- A4: 炎症消解与损伤控制
-- B1: 先天免疫
-- B2: 适应性免疫
-- B3: 免疫调节与耐受
-- C1: 能量代谢与分解代谢
-- C2: 生物合成与合成代谢
-- C3: 解毒与代谢应激处理
-- D1: 神经调节与信号传递
-- D2: 内分泌与自主调节
-- E1: 生殖
-- E2: 发育与生殖成熟
-
-## 已分析数据集 ({analyzed['total_count']} 个)
-
-"""
-        
-        if analyzed['datasets']:
-            for d in analyzed['datasets']:
-                prompt += f"- **{d['dataset_id']}**: {d['disease_type']}, "
-                prompt += f"激活系统: {', '.join(d.get('systems_activated', []))}\n"
-        else:
-            prompt += "（尚未分析任何数据集）\n"
-        
-        prompt += f"""
-## 疾病类型覆盖
-
-已覆盖: {', '.join(analyzed['disease_types']) if analyzed['disease_types'] else '无'}
-
-## 系统激活统计
-
-"""
-        
-        if analyzed['system_coverage']:
-            for system, count in sorted(analyzed['system_coverage'].items()):
-                prompt += f"- {system}: {count} 次\n"
-        else:
-            prompt += "（尚无统计数据）\n"
-        
-        prompt += """
-## 任务
-
-请基于五大系统和 14 个子类的定义，推荐一个新的 GEO 疾病数据集（GSE 编号）进行分析。
-
-### 推荐标准
-
-1. **系统覆盖互补性**: 优先推荐能激活未充分研究系统的疾病
-2. **疾病类型多样性**: 选择与已有疾病类型不同的新疾病
-3. **科学价值**: 疾病具有重要的临床意义和研究价值
-4. **系统间关联**: 能展示多个系统之间的相互作用
-5. **数据可用性**: 确保 GEO 数据库中有该数据集
-
-### 硬性要求（必须满足）
-
-- **物种**: 必须是人类（Homo sapiens）数据，taxid=9606
-- **数据类型**: 必须是基因表达谱（Expression profiling by array 或 RNA-seq），有实际的表达矩阵
-- **数据集类型**: 必须是普通 Series，**不能是 SuperSeries**（SuperSeries 只有元数据，没有表达矩阵）
-- **样本数**: 建议 20 个以上样本，有对照组和疾病组
-- **平台**: 优先 Affymetrix（GPL96, GPL570 等）或 Illumina 芯片平台
-
-### 推荐疾病类型示例
-
-- **自身免疫性疾病**: 系统性红斑狼疮、类风湿关节炎（B + C + D）
-- **心血管疾病**: 心肌梗死、动脉粥样硬化（A + C + D）
-- **肾脏疾病**: 慢性肾病、肾小球肾炎（C + D）
-- **肝脏疾病**: 肝硬化、非酒精性脂肪肝（C + A）
-- **呼吸系统疾病**: 慢性阻塞性肺病、哮喘（B + C）
-- **精神疾病**: 抑郁症、精神分裂症（D + B）
-- **罕见病**: 线粒体病、溶酶体贮积病（C + A）
-
-## 输出格式
-
-请以 JSON 格式返回你的推荐：
-
-```json
-{
-    "selected_dataset_id": "GSE数据集ID",
-    "name": "疾病英文名",
-    "chinese_name": "疾病中文名",
-    "disease_type": "疾病类型（如 autoimmune, cardiovascular 等）",
-    "expected_systems": ["预期激活的系统，如 System A, System B"],
-    "expected_subcategories": ["预期激活的子类，如 A1, B2, C1"],
-    "reasoning": "推荐理由（2-3句话，说明为什么这个疾病有价值）",
-    "expected_insights": "预期发现（1-2句话）",
-    "description": "疾病简要描述"
-}
-```
-
-请直接返回 JSON，不要添加其他文字。
-"""
-        
-        return prompt
-    
-    def _parse_new_dataset_recommendation(self, response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """解析 LLM 推荐的新数据集"""
-        
-        try:
-            dataset_id = response.get('selected_dataset_id')
-            
-            if not dataset_id or not dataset_id.startswith('GSE'):
-                self.logger.warning("LLM 未返回有效的 GSE ID")
-                return None
-            
-            # 构建数据集信息
-            new_dataset = {
-                'dataset_id': dataset_id,
-                'name': response.get('name', 'Unknown'),
-                'chinese_name': response.get('chinese_name', '未知疾病'),
-                'disease_type': response.get('disease_type', 'unknown'),
-                'expected_systems': response.get('expected_systems', []),
-                'expected_subcategories': response.get('expected_subcategories', []),
-                'description': response.get('description', ''),
-                'selection_reasoning': response.get('reasoning', ''),
-                'expected_insights': response.get('expected_insights', ''),
-                'is_new_recommendation': True  # 标记为新推荐
-            }
-            
-            return new_dataset
-            
-        except Exception as e:
-            self.logger.error(f"解析新数据集推荐失败: {e}")
-            return None
     
     def run(self, use_llm: bool = True) -> Optional[Dict[str, Any]]:
         """

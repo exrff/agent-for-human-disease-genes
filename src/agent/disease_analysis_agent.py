@@ -43,13 +43,18 @@ class AnalysisState(TypedDict):
     expression_matrix: Optional[Any]  # 表达矩阵
     sample_metadata: Optional[Dict]  # 样本元数据
     classification_results: Optional[Dict]  # 分类结果
-    ssgsea_scores: Optional[Dict]  # ssGSEA 得分
+    ssgsea_scores: Optional[Dict]  # ssGSEA 子类得分 {code: {mean_score, ...}}
+    system_scores: Optional[Dict]  # 五大系统汇总得分 {System A: float, ...}
     statistical_results: Optional[Dict]  # 统计分析结果
     
     # 决策信息
     disease_type: Optional[str]  # 疾病类型
     analysis_strategy: Optional[str]  # 分析策略
     visualization_plan: List[str]  # 可视化计划
+    
+    # 中间产物
+    metadata: Optional[Dict]  # 节点间传递的附加元数据
+    report_content: Optional[str]  # 报告正文（generate_report → export_pdf）
     
     # 输出
     figures: List[str]  # 生成的图表路径
@@ -87,6 +92,10 @@ def extract_dataset_metadata(state: AnalysisState) -> AnalysisState:
     # 从配置中获取数据集信息
     from .config import AgentConfig
     dataset_info = AgentConfig.get_dataset_config(dataset_id)
+    
+    # 如果配置中没有（LLM 新推荐的数据集），保留已有的 dataset_info（来自 selector）
+    if not dataset_info and state.get("dataset_info"):
+        dataset_info = state["dataset_info"]
     
     state["dataset_info"] = dataset_info
     state["disease_type"] = dataset_info.get("disease_type", "unknown")
@@ -231,27 +240,24 @@ def download_dataset(state: AnalysisState) -> AnalysisState:
             state['metadata']['download_result'] = result
             
         else:
-            # 下载失败，记录错误但继续（使用模拟数据）
-            state["raw_data_path"] = data_path
-            state["log_messages"].append(f"❌ 数据下载失败")
-            for error in result.get('errors', []):
-                state["log_messages"].append(f"  {error}")
-            state["log_messages"].append(f"⚠️  将使用模拟数据继续分析")
-            
-            # 记录错误
-            if 'errors' not in state:
-                state['errors'] = []
-            state['errors'].append(f"数据下载失败: {dataset_id}")
+            # 下载失败：GPL 文件缺失，无法继续分析，直接终止
+            error_msg = f"❌ {dataset_id} 下载失败，缺少 GPL 平台文件，终止分析"
+            self_errors = result.get('errors', [])
+            state["log_messages"].append(error_msg)
+            for e in self_errors:
+                state["log_messages"].append(f"  {e}")
+            state["log_messages"].append("💡 请将对应 GPL 文件放入 data/gpl_platforms/ 后重试")
+            state["errors"].append(error_msg)
+            # 不设置 raw_data_path，后续节点会因此跳过
+            return state
     
     except Exception as e:
-        # 下载器异常，记录但继续
-        state["raw_data_path"] = data_path
-        state["log_messages"].append(f"❌ 下载器异常: {e}")
-        state["log_messages"].append(f"⚠️  将使用模拟数据继续分析")
-        
-        if 'errors' not in state:
-            state['errors'] = []
-        state['errors'].append(f"下载器异常: {str(e)}")
+        # 下载器异常，直接终止
+        error_msg = f"❌ 下载器异常: {e}"
+        state["log_messages"].append(error_msg)
+        state["log_messages"].append("💡 请将对应 GPL 文件放入 data/gpl_platforms/ 后重试")
+        state["errors"].append(error_msg)
+        return state
     
     state["log_messages"].append("数据准备完成")
     
@@ -320,11 +326,18 @@ def preprocess_data(state: AnalysisState) -> AnalysisState:
 def _validate_series_matrix(series_file) -> dict:
     """
     验证 series matrix 文件是否包含实际表达数据。
-    SuperSeries 只有元数据，没有 !series_matrix_table_begin，应被拒绝。
-    同时检查物种是否为人类。
+    拒绝：SuperSeries、小鼠数据、ChIP-seq/ATAC-seq等非表达谱数据。
     """
     import gzip
     result = {'has_data': False, 'reason': '', 'organism': None, 'sample_count': 0}
+    
+    # 非表达谱的数据类型关键词
+    NON_EXPRESSION_TYPES = [
+        'chip-seq', 'atac-seq', 'chip seq', 'genome binding',
+        'occupancy profiling', 'hi-c', 'cut&run', 'cut&tag',
+        'bisulfite', 'methylation', 'snp array', 'cnv',
+    ]
+    
     try:
         path = Path(series_file)
         opener = gzip.open(path, 'rt', encoding='utf-8', errors='ignore') if path.suffix == '.gz' else open(path, 'r', encoding='utf-8', errors='ignore')
@@ -332,30 +345,48 @@ def _validate_series_matrix(series_file) -> dict:
         organism = None
         is_super = False
         sample_count = 0
+        series_types = []
         with opener as f:
             for line in f:
                 if '!series_matrix_table_begin' in line.lower():
                     has_table = True
                 if '!Series_platform_taxid' in line or '!Series_sample_taxid' in line:
-                    if '10090' in line:  # 小鼠
+                    if '10090' in line:
                         organism = 'mouse'
-                    elif '9606' in line:  # 人类
+                    elif '9606' in line:
                         organism = 'human'
                 if 'SuperSeries' in line or 'This SuperSeries' in line:
                     is_super = True
                 if '!Series_sample_id' in line:
                     sample_count = len(line.split()) - 1
+                if '!Series_type' in line:
+                    series_types.append(line.lower())
+
         result['organism'] = organism
         result['sample_count'] = sample_count
+
         if is_super and not has_table:
             result['reason'] = 'SuperSeries（无表达矩阵，只有子系列引用）'
             return result
         if not has_table:
-            result['reason'] = '无 series_matrix_table_begin，可能是 SuperSeries 或 RNA-seq raw data'
+            result['reason'] = '无 series_matrix_table_begin，不含表达矩阵'
             return result
+
+        # 检查数据类型
+        all_types = ' '.join(series_types)
+        for bad_type in NON_EXPRESSION_TYPES:
+            if bad_type in all_types:
+                result['reason'] = f'非表达谱数据类型: {bad_type}（需要 Expression profiling by array/sequencing）'
+                return result
+
         if organism == 'mouse':
             result['reason'] = '小鼠数据（taxid=10090），不适用于人类疾病分析'
             return result
+
+        if sample_count < 6:
+            result['reason'] = f'样本数过少（{sample_count} 个），无法进行有效的组间比较'
+            return result
+
         result['has_data'] = True
         result['reason'] = 'OK'
     except Exception as e:
@@ -544,38 +575,6 @@ def _build_subcategory_gene_sets() -> Dict[str, List[str]]:
         gene_sets[code] = list(all_genes)
 
     return gene_sets
-    """查找 GPL 平台文件：先从 series matrix 提取平台 ID，再按优先级查找"""
-    import gzip, re
-
-    # 从 series matrix 提取平台 ID
-    platform_id = None
-    try:
-        with gzip.open(series_file, 'rt', encoding='utf-8', errors='ignore') as f:
-            for line in f:
-                if line.startswith('!Series_platform_id'):
-                    m = re.search(r'GPL\d+', line)
-                    if m:
-                        platform_id = m.group()
-                    break
-    except Exception:
-        pass
-
-    # 按优先级查找文件
-    search_dirs = [Path("data/gpl_platforms"), dataset_dir]
-    for d in search_dirs:
-        if not d.exists():
-            continue
-        # 精确匹配平台 ID
-        if platform_id:
-            for f in d.iterdir():
-                if f.name.startswith(platform_id) and f.suffix == '.txt':
-                    return f
-        # 任意 GPL txt 文件
-        for f in d.iterdir():
-            if f.name.startswith('GPL') and f.suffix == '.txt':
-                return f
-
-    return None
 
 
 def _extract_sample_info(series_file: Path) -> Dict:
@@ -783,66 +782,60 @@ def _compute_ssgsea_scores(gene_expr_df, gene_set_genes: list, alpha: float = 0.
 
 
 def decide_visualization(state: AnalysisState) -> AnalysisState:
-    """
-    决策节点2: 确定可视化策略
-    
-    根据分析结果和数据特征，选择合适的可视化方式：
-    - 热图
-    - 箱线图
-    - 时序图
-    - 相关性网络图
-    - 火山图
-    """
+    """决策节点2: 确定可视化策略"""
     state["current_step"] = "decide_visualization"
-    state["log_messages"].append(f"[{datetime.now()}] 决策可视化策略...")
-    
-    # 尝试使用 LLM 决策
+
+    # LLM 返回的类型名 → plot_generator 支持的类型
+    VIZ_MAP = {
+        'heatmap': 'heatmap',
+        'boxplot': 'boxplot',
+        'correlation_heatmap': 'correlation',
+        'correlation': 'correlation',
+        'time_series': 'heatmap',   # 降级到热图
+        'clustering': 'heatmap',
+        'network': 'correlation',
+        'volcano': 'barplot',
+        'trajectory': 'barplot',
+        'immune_profile': 'barplot',
+        'pathway': 'barplot',
+    }
+    ALWAYS_INCLUDE = ['radar', 'barplot']  # 这两个始终生成
+
     try:
         from .llm_integration import create_llm_integration
-        
         llm = create_llm_integration()
-        
-        # 准备数据特征
+
         data_characteristics = {
-            'sample_count': len(state.get('sample_metadata', {}).get('accessions', [])),
+            'sample_count': state.get('sample_metadata', {}).get('sample_count', 0),
             'has_time_series': 'time' in str(state.get('sample_metadata', {})).lower(),
-            'has_groups': len(set(state.get('sample_metadata', {}).get('characteristics', [[]])[0])) > 1 if state.get('sample_metadata') else False
+            'analysis_strategy': state.get('analysis_strategy', 'case_control'),
         }
-        
-        # LLM 决策
+
         decision = llm.decide_visualization_strategy(
-            state['analysis_strategy'],
+            state.get('analysis_strategy', 'case_control'),
             data_characteristics
         )
-        
-        state['visualization_plan'] = decision.get('primary_visualizations', [])
-        state['log_messages'].append(
-            f"LLM 可视化决策: {', '.join(state['visualization_plan'])}"
-        )
-        state['log_messages'].append(f"理由: {decision.get('reasoning', '')}")
-        
-        # 保存决策详情
-        if 'metadata' not in state:
-            state['metadata'] = {}
-        state['metadata']['visualization_decision'] = decision
-        
+
+        llm_types = decision.get('primary_visualizations', [])
+        mapped = [VIZ_MAP[t] for t in llm_types if t in VIZ_MAP]
+        plan = list(dict.fromkeys(ALWAYS_INCLUDE + mapped))  # 去重保序
+
+        state['visualization_plan'] = plan
+        state['log_messages'].append(f"可视化计划 (LLM): {', '.join(plan)}")
+
     except Exception as e:
-        # 回退到规则引擎
-        state['log_messages'].append(f"LLM 不可用，使用默认可视化方案: {e}")
-        
-        viz_map = {
-            'case_control': ['heatmap', 'boxplot', 'volcano'],
-            'subtype_comparison': ['clustering', 'heatmap', 'network'],
-            'time_series': ['time_series', 'heatmap', 'trajectory'],
-            'correlation': ['correlation_heatmap', 'network']
-        }
-        
-        state['visualization_plan'] = viz_map.get(
-            state.get('analysis_strategy', 'case_control'),
-            ['heatmap']
-        )
-        state['log_messages'].append(f"默认可视化: {', '.join(state['visualization_plan'])}")
-    
+        state['log_messages'].append(f"可视化决策回退: {e}")
+        strategy = state.get('analysis_strategy', 'case_control')
+        extra = {
+            'case_control': ['heatmap', 'boxplot', 'correlation'],
+            'subtype_comparison': ['heatmap', 'correlation'],
+            'time_series': ['heatmap', 'boxplot'],
+            'correlation_analysis': ['correlation', 'heatmap'],
+        }.get(strategy, ['heatmap', 'boxplot'])
+        plan = list(dict.fromkeys(ALWAYS_INCLUDE + extra))
+        state['visualization_plan'] = plan
+        state['log_messages'].append(f"可视化计划 (默认): {', '.join(plan)}")
+
     return state
 
 
@@ -850,35 +843,43 @@ def generate_plots(state: AnalysisState) -> AnalysisState:
     """节点6: 生成图表"""
     state["current_step"] = "generate_plots"
     state["log_messages"].append(f"[{datetime.now()}] 生成可视化图表...")
-    
+
+    ssgsea_scores = state.get("ssgsea_scores")
+    system_scores = state.get("system_scores")
+    gene_expr_df = state.get("expression_matrix")
+
+    if not ssgsea_scores or not system_scores:
+        state["log_messages"].append("⚠ 无 ssGSEA 得分，跳过绘图")
+        return state
+
     import os
-    
-    # 确保输出目录存在
     output_dir = f"results/agent_analysis/{state['dataset_id']}/figures"
     os.makedirs(output_dir, exist_ok=True)
-    
-    # 获取可视化计划
-    viz_plan = state.get("visualization_plan", ["heatmap", "boxplot"])
-    
-    # 模拟生成图表
-    generated_figures = []
-    
-    for viz_type in viz_plan:
-        fig_path = os.path.join(output_dir, f"{viz_type}.png")
-        
-        # 创建一个简单的占位文件
-        with open(fig_path, 'w') as f:
-            f.write(f"# Placeholder for {viz_type} visualization\n")
-            f.write(f"# Dataset: {state['dataset_id']}\n")
-            f.write(f"# Generated at: {datetime.now()}\n")
-        
-        generated_figures.append(fig_path)
-        state["log_messages"].append(f"  ✓ 生成 {viz_type}: {fig_path}")
-    
-    state["figures"] = generated_figures
-    
-    state["log_messages"].append(f"✓ 共生成 {len(generated_figures)} 个图表")
-    
+
+    viz_plan = state.get("visualization_plan") or ['radar', 'barplot', 'heatmap', 'boxplot', 'correlation']
+
+    # heatmap/boxplot/correlation 需要表达矩阵，没有就降级
+    if gene_expr_df is None:
+        viz_plan = [v for v in viz_plan if v not in ('heatmap', 'boxplot', 'correlation')]
+        state["log_messages"].append("⚠ 无表达矩阵，跳过需要样本数据的图表")
+
+    try:
+        from .plot_generator import generate_all_plots
+        figures = generate_all_plots(
+            dataset_id=state["dataset_id"],
+            ssgsea_scores=ssgsea_scores,
+            system_scores=system_scores,
+            gene_expr_df=gene_expr_df,
+            sample_metadata=state.get("sample_metadata"),
+            output_dir=output_dir,
+            viz_plan=viz_plan,
+        )
+        state["figures"] = figures
+        state["log_messages"].append(f"✓ 共生成 {len(figures)} 个图表")
+    except Exception as e:
+        import traceback
+        state["log_messages"].append(f"❌ 绘图失败: {e}\n{traceback.format_exc()}")
+
     return state
 
 
@@ -1060,8 +1061,20 @@ def export_pdf(state: AnalysisState) -> AnalysisState:
         "analysis_time": datetime.now().isoformat(),
         "classification_results": state.get("classification_results", {}),
         "system_scores": state.get("system_scores", {}),
+        "ssgsea_scores": {
+            code: {k: v for k, v in info.items() if k != 'matched_genes'}
+            for code, info in (state.get("ssgsea_scores") or {}).items()
+        },
+        "top_systems": [
+            sys for sys, _ in sorted(
+                (state.get("system_scores") or {}).items(),
+                key=lambda x: x[1], reverse=True
+            )[:3]
+        ],
         "figures": state.get("figures", []),
-        "report_path": report_path
+        "report_path": report_path,
+        "errors": state.get("errors", []),
+        "pipeline_log": state.get("log_messages", [])[-30:],
     }
     
     with open(summary_path, 'w', encoding='utf-8') as f:
@@ -1194,13 +1207,14 @@ def create_disease_analysis_graph():
 # 主函数
 # ============================================================================
 
-def run_disease_analysis(dataset_id: str, config: Optional[Dict] = None):
+def run_disease_analysis(dataset_id: str, config: Optional[Dict] = None, dataset_info: Optional[Dict] = None):
     """
     运行疾病分析工作流
     
     Args:
         dataset_id: 数据集ID
         config: 配置参数
+        dataset_info: 数据集元信息（来自 DiseaseSelector 推荐，用于 LLM 新推荐的数据集）
     """
     # 创建工作流
     app = create_disease_analysis_graph()
@@ -1208,17 +1222,20 @@ def run_disease_analysis(dataset_id: str, config: Optional[Dict] = None):
     # 初始化状态
     initial_state = {
         "dataset_id": dataset_id,
-        "dataset_info": {},
+        "dataset_info": dataset_info or {},
         "raw_data_path": None,
         "processed_data_path": None,
         "expression_matrix": None,
         "sample_metadata": None,
         "classification_results": None,
         "ssgsea_scores": None,
+        "system_scores": None,
         "statistical_results": None,
         "disease_type": None,
         "analysis_strategy": None,
         "visualization_plan": [],
+        "metadata": None,
+        "report_content": None,
         "figures": [],
         "interpretation": None,
         "report_path": None,

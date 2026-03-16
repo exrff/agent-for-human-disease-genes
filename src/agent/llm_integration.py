@@ -95,6 +95,7 @@ class LLMIntegration:
     def _generate_dashscope(self, prompt: str) -> str:
         """使用 DashScope OpenAI 兼容接口生成内容"""
         import urllib.request
+        import urllib.error
         import json as _json
 
         url = f"{self.dashscope_base_url}/chat/completions"
@@ -113,8 +114,12 @@ class LLMIntegration:
             method="POST"
         )
 
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            data = _json.loads(resp.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                data = _json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", errors="ignore")
+            raise Exception(f"DashScope HTTP {e.code}: {body}") from e
 
         return data["choices"][0]["message"]["content"]
     

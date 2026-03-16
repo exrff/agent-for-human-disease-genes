@@ -33,16 +33,8 @@ class GEODownloader:
         # GEO FTP 基础 URL
         self.geo_ftp_base = "https://ftp.ncbi.nlm.nih.gov/geo"
         
-        # 初始化 GPL 管理器
-        try:
-            try:
-                from .gpl_manager import GPLManager
-            except ImportError:
-                from src.data_extraction.gpl_manager import GPLManager
-            self.gpl_manager = GPLManager()
-        except Exception as e:
-            self.logger.warning(f"GPL 管理器初始化失败: {e}")
-            self.gpl_manager = None
+        # 初始化 GPL 管理器（已废弃，保留字段避免引用报错）
+        self.gpl_manager = None
         
     def download_dataset(self, gse_id: str) -> Dict[str, any]:
         """
@@ -165,199 +157,31 @@ class GEODownloader:
     
     def _get_platform_file(self, platform_id: str, output_dir: Path) -> Optional[Path]:
         """
-        获取平台文件（优先使用本地 GPL 数据库）
-        
-        Args:
-            platform_id: 平台 ID
-            output_dir: 输出目录
-        
-        Returns:
-            平台文件路径
+        获取平台文件。
+        优先级：gpl_manager → data/gpl_platforms/ 直接扫描 → 在线下载
         """
-        # 方法 1: 从本地 GPL 数据库获取
-        if self.gpl_manager:
-            local_file = self.gpl_manager.get_platform_file(platform_id)
-            if local_file:
-                self.logger.info(f"  ✓ 从本地 GPL 数据库获取: {platform_id}")
-                
-                # 复制到数据集目录（可选）
-                import shutil
-                dest_file = output_dir / local_file.name
-                if not dest_file.exists():
-                    shutil.copy2(local_file, dest_file)
-                
-                return dest_file
-        
-        # 方法 2: 在线下载
-        self.logger.info(f"  本地未找到 {platform_id}，尝试在线下载...")
-        return self._download_platform(platform_id, output_dir)
-    
-    def _download_platform(self, platform_id: str, output_dir: Path) -> Optional[Path]:
-        """下载平台注释文件"""
-        
-        # 构建平台目录名: GPL96 -> GPL0nnn, GPL17988 -> GPL17nnn
-        num = platform_id.replace('GPL', '')
-        prefix_len = max(1, len(num) - 3)
-        platform_dir = f"GPL{num[:prefix_len]}nnn"
-        
-        # 方法 1: 尝试 annot 目录下的常见格式
-        possible_files = [
-            f"{platform_id}.annot.gz",
-            f"{platform_id}.txt",
-        ]
-        
-        for filename in possible_files:
-            url = f"{self.geo_ftp_base}/platforms/{platform_dir}/{platform_id}/annot/{filename}"
-            output_file = output_dir / filename
-            
-            try:
-                self.logger.info(f"  尝试下载: {filename}")
-                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-                req = urllib.request.Request(url, headers=headers)
-                with urllib.request.urlopen(req, timeout=60) as response:
-                    with open(output_file, 'wb') as f:
-                        while True:
-                            chunk = response.read(65536)
-                            if not chunk:
-                                break
-                            f.write(chunk)
-                
-                self.logger.info(f"  ✓ 下载成功: {filename}")
-                return output_file
-                    
-            except Exception as e:
-                self.logger.debug(f"  下载失败 ({filename}): {e}")
-                if output_file.exists():
-                    output_file.unlink()
-                continue
-        
-        # 方法 2: 尝试下载 GPL soft 文件（许多新平台只有 soft 格式）
-        self.logger.info(f"  尝试下载 GPL soft 文件...")
-        soft_files = [
-            f"{platform_id}_family.soft.gz",
-            f"{platform_id}.soft.gz",
-        ]
-        for filename in soft_files:
-            url = f"{self.geo_ftp_base}/platforms/{platform_dir}/{platform_id}/soft/{filename}"
-            output_file = output_dir / filename
-            try:
-                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-                req = urllib.request.Request(url, headers=headers)
-                with urllib.request.urlopen(req, timeout=120) as response:
-                    with open(output_file, 'wb') as f:
-                        while True:
-                            chunk = response.read(65536)
-                            if not chunk:
-                                break
-                            f.write(chunk)
-                self.logger.info(f"  ✓ 下载 soft 文件成功: {filename}")
-                # 转换 soft.gz → txt 格式供后续解析
-                converted = self._convert_soft_to_txt(output_file, platform_id, output_dir)
-                if converted:
-                    return converted
-                return output_file
-            except Exception as e:
-                self.logger.debug(f"  soft 下载失败 ({filename}): {e}")
-                if output_file.exists():
-                    output_file.unlink()
-                continue
-        
-        # 方法 3: 从 GEO 网页找到正确文件名
-        self.logger.info(f"  尝试查找平台目录中的文件...")
-        try:
-            platform_page_url = f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={platform_id}"
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-            req = urllib.request.Request(platform_page_url, headers=headers)
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                page_content = resp.read().decode('utf-8', errors='ignore')
-            
-            import re
-            pattern = rf'{platform_id}-\d+\.txt'
-            matches = re.findall(pattern, page_content)
-            
-            if matches:
-                filename = matches[0]
-                self.logger.info(f"  找到文件: {filename}")
-                url = f"{self.geo_ftp_base}/platforms/{platform_dir}/{platform_id}/annot/{filename}"
-                output_file = output_dir / filename
-                
-                req2 = urllib.request.Request(url, headers=headers)
-                with urllib.request.urlopen(req2, timeout=60) as response:
-                    with open(output_file, 'wb') as f:
-                        while True:
-                            chunk = response.read(65536)
-                            if not chunk:
-                                break
-                            f.write(chunk)
-                
-                self.logger.info(f"  ✓ 下载成功: {filename}")
-                return output_file
-        
-        except Exception as e:
-            self.logger.debug(f"  查找文件失败: {e}")
-        
+        import shutil
+
+        # 方法 1: 通过 gpl_manager（如果可用）
+    def _get_platform_file(self, platform_id: str, output_dir: Path) -> Optional[Path]:
+        """
+        从 data/gpl_platforms/ 查找本地平台文件。
+        找不到直接返回 None，不尝试在线下载。
+        """
+        import shutil
+        gpl_dir = Path("data/gpl_platforms")
+        if gpl_dir.exists():
+            for f in gpl_dir.iterdir():
+                if f.name.startswith(platform_id) and f.suffix in ('.txt', '.gz'):
+                    self.logger.info(f"  ✓ 找到本地平台文件: {f.name}")
+                    dest_file = output_dir / f.name
+                    if not dest_file.exists():
+                        shutil.copy2(f, dest_file)
+                    return dest_file
+
+        self.logger.error(f"  ❌ 本地未找到 {platform_id} 平台文件（data/gpl_platforms/ 中无匹配）")
         return None
 
-    def _convert_soft_to_txt(self, soft_gz_file: Path, platform_id: str, output_dir: Path) -> Optional[Path]:
-        """将 GPL soft.gz 文件转换为简单的 probe→gene txt 格式"""
-        import gzip, re
-        output_file = output_dir / f"{platform_id}.txt"
-        try:
-            rows = []
-            with gzip.open(soft_gz_file, 'rt', encoding='utf-8', errors='ignore') as f:
-                in_table = False
-                header = None
-                id_col = gene_col = None
-                for line in f:
-                    line = line.rstrip('\n')
-                    if line.startswith('!platform_table_begin'):
-                        in_table = True
-                        continue
-                    if line.startswith('!platform_table_end'):
-                        break
-                    if in_table:
-                        if header is None:
-                            header = line.split('\t')
-                            # 找 ID 列和 gene symbol 列
-                            for i, h in enumerate(header):
-                                h_lower = h.lower()
-                                if h_lower == 'id':
-                                    id_col = i
-                                if 'gene_assignment' in h_lower or 'gene symbol' in h_lower or 'gene_symbol' in h_lower or 'symbol' in h_lower:
-                                    gene_col = i
-                            if id_col is None:
-                                id_col = 0
-                            if gene_col is None:
-                                # 找包含 gene 的列
-                                for i, h in enumerate(header):
-                                    if 'gene' in h.lower():
-                                        gene_col = i
-                                        break
-                            rows.append('ID\tGene Symbol')
-                        else:
-                            parts = line.split('\t')
-                            if len(parts) > max(id_col or 0, gene_col or 0):
-                                probe = parts[id_col] if id_col is not None else parts[0]
-                                gene_raw = parts[gene_col] if gene_col is not None else ''
-                                # gene_assignment 格式: "NM_xxx // GENE // ..." 取第二个 //
-                                if '//' in gene_raw:
-                                    gene = gene_raw.split('//')[1].strip()
-                                else:
-                                    gene = gene_raw.strip()
-                                rows.append(f"{probe}\t{gene}")
-            
-            if len(rows) > 1:
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write('\n'.join(rows))
-                self.logger.info(f"  ✓ soft 转换完成: {output_file.name} ({len(rows)-1} probes)")
-                return output_file
-        except Exception as e:
-            self.logger.debug(f"  soft 转换失败: {e}")
-        return None
-        
-        return None
-
-    
     def _extract_platform_ids(self, series_file: Path) -> list:
         """从 series matrix 文件中提取平台 ID"""
         

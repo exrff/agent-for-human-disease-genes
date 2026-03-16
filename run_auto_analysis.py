@@ -74,7 +74,7 @@ def run_single_analysis(use_llm: bool = True):
     # 运行分析
     logger.info("步骤 2: 运行分析...")
     try:
-        run_disease_analysis(dataset_id)
+        run_disease_analysis(dataset_id, dataset_info=selected)
         logger.info(f"✅ {dataset_id} 分析完成")
         return True
     except Exception as e:
