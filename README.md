@@ -105,3 +105,76 @@ results/agent_analysis/       # 分析输出（报告、图表、JSON）
 ## 许可证
 
 MIT
+
+## 示例运行结果（GSE12288 · 冠状动脉疾病）
+
+以下为对 [GSE12288](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE12288)（196例冠心病外周血，GPL96平台）的完整分析示例。
+
+### 运行过程
+
+```
+步骤 1: 疾病选择 Agent 扫描已分析数据集 → LLM 从白名单推荐 GSE12288
+        推荐理由: 未覆盖的 cardiovascular 类型，196大样本，与已有代谢/感染类数据互补
+
+步骤 2: 下载 series matrix（~12MB），从 data/gpl_platforms/ 加载本地 GPL96 注释
+
+步骤 3: probe → gene 映射，生成 13237 genes × 222 samples 表达矩阵
+
+步骤 4: 五大系统分类 → 8143/13237 基因匹配
+
+步骤 5: ssGSEA 计算 14 个子类激活分数
+
+步骤 6: LLM 制定分析策略 → 生成雷达图、柱状图、箱线图
+
+步骤 7: LLM 解读生物学意义 → 生成 Markdown 报告
+```
+
+总耗时约 **4分钟**（含两次 LLM 调用）。
+
+### 输出文件
+
+| 文件 | 说明 |
+|------|------|
+| `results/agent_analysis/GSE12288/analysis_summary.json` | 结构化结果（ssGSEA分数、top系统、元信息） |
+| `results/agent_analysis/GSE12288/GSE12288_report.md` | LLM生成的完整分析报告（含生物学解读） |
+| `results/agent_analysis/GSE12288/figures/` | 可视化图表（3张） |
+| `logs/auto_analysis_YYYYMMDD_HHMMSS.log` | 完整运行日志 |
+
+### 可视化图表
+
+**雷达图 — 五大系统激活分数**
+
+![radar](results/agent_analysis/GSE12288/figures/radar_system_scores.png)
+
+**柱状图 — 子类激活排名（Top 14）**
+
+![barplot](results/agent_analysis/GSE12288/figures/barplot_subcat_ranking.png)
+
+**箱线图 — 系统分数分布**
+
+![boxplot](results/agent_analysis/GSE12288/figures/boxplot_system_scores.png)
+
+### 主要发现（LLM 解读摘要）
+
+冠心病外周血呈现显著的**代谢-免疫双重激活**模式：
+
+- **System C（代谢）** 激活最强：C1 能量代谢(0.353)、C2 生物合成(0.314) 居所有子类之首
+- **System B（免疫）** 紧随其后：B1 先天免疫(0.317)、B3 免疫调节(0.278) 高度激活
+- **System D/E** 分数较低，提示外周血转录组改变集中于全身性代谢应激与固有免疫，而非神经/激素调节
+
+> 完整报告见 [`results/agent_analysis/GSE12288/GSE12288_report.md`](results/agent_analysis/GSE12288/GSE12288_report.md)
+
+### 日志格式示例
+
+日志保存在 `logs/auto_analysis_YYYYMMDD_HHMMSS.log`，记录每个节点的执行状态：
+
+```
+2026-03-16 11:02:01 - INFO - LLM 推荐数据集: GSE12288
+2026-03-16 11:02:01 - INFO - 推荐理由: 未覆盖的 cardiovascular 类型...
+2026-03-16 11:02:28 - INFO - ✅ Series matrix 下载成功: GSE12288_series_matrix.txt.gz
+2026-03-16 11:02:28 - INFO - ✓ 找到本地平台文件: GPL96-57554.txt
+2026-03-16 11:02:37 - INFO - ✓ 分类完成: 8143/13237 基因匹配到基因集
+2026-03-16 11:02:37 - INFO - ✓ ssGSEA 完成: 14 个子类
+2026-03-16 11:03:51 - INFO - ✓ 生成图表: radar_system_scores.png
+2026-03-16 11:04:43 - INFO - ✅ GSE12288 分析完成
+```

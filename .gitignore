@@ -40,8 +40,11 @@ env/
 logs/
 *.log
 
-# 结果文件
+# 结果文件（只保留 GSE12288 示例）
 results/
+!results/agent_analysis/
+!results/agent_analysis/GSE12288/
+!results/agent_analysis/GSE12288/**
 cache/
 
 # 数据文件（体积过大，不上传）
