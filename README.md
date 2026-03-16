@@ -1,271 +1,107 @@
-# 五大功能系统分类与智能分析系统
+# 五维生物系统分类 · 疾病分析 Agent
 
-## 项目简介
+基于 **LangGraph** 构建的自主疾病基因组分析智能体。Agent 能够自动选择 GEO 数据集、执行 ssGSEA 分析、生成可视化报告，并通过 LLM 解读生物学意义。
 
-本项目实现了基于功能目标的五大系统分类框架，并构建了自动化疾病数据集分析智能体。
+## 项目亮点
 
-### 五大功能系统
+- **LangGraph 多节点工作流**：11 个节点的有向图，涵盖数据下载 → 预处理 → 分类 → ssGSEA → 可视化 → LLM 解读 → 报告导出全流程
+- **自主数据集选择**：LLM 从 90+ 个人类疾病 GEO 数据集白名单中，根据已分析疾病的覆盖度和系统多样性，智能推荐下一个最有价值的数据集
+- **五大生物系统分类**：基于 GO/KEGG 注释，将基因组分类为修复(A)、免疫(B)、代谢(C)、神经调节(D)、生殖发育(E) 五大系统
+- **自实现 ssGSEA**：不依赖 gseapy，自行实现 single-sample GSEA 算法，对每个样本计算系统激活分数
+- **DashScope LLM 集成**：通过 OpenAI 兼容接口调用 Qwen 模型，完成数据集推荐、分析策略制定、结果解读三个环节
 
-- **System A**: 稳态与修复 (Self-Healing & Structural Reconstruction)
-- **System B**: 免疫防御 (Immune Defense)
-- **System C**: 代谢调节 (Energy & Metabolic Homeostasis)
-- **System D**: 调节协调 (Cognitive-Regulatory)
-- **System E**: 生殖发育 (Reproduction & Continuity)
+## 架构
 
-### 核心功能
-
-1. **五大系统分类**: 对 GO 本体和 KEGG 通路进行功能分类
-2. **ssGSEA 分析**: 计算 14 个功能子类的激活得分
-3. **智能体自动化**: 自动选择数据集、分析、生成报告
-4. **LLM 集成**: 使用阿里云 DashScope (qwen-plus) 进行智能决策
+```
+run_auto_analysis.py          # 主入口
+│
+├── DiseaseSelector           # 疾病选择 Agent
+│   ├── 扫描已分析数据集
+│   ├── 从白名单(DATASETS + geo_whitelist.csv)获取候选
+│   └── LLM 推荐 / 规则引擎兜底
+│
+└── LangGraph 分析工作流
+    ├── extract_metadata      # 提取数据集元信息
+    ├── download_data         # 下载 series matrix（本地 GPL 优先）
+    ├── preprocess_data       # probe → gene 表达矩阵
+    ├── classify_genes        # 五大系统分类
+    ├── run_ssgsea            # ssGSEA 系统激活分数
+    ├── determine_strategy    # LLM 制定分析策略
+    ├── generate_visualizations # 雷达图/箱线图/热图等
+    ├── interpret_results     # LLM 生物学解读
+    ├── generate_report       # Markdown 报告
+    └── export_pdf            # 保存结果 + analysis_summary.json
+```
 
 ## 快速开始
 
-### 1. 环境准备
+**环境要求**：Python 3.11，conda
 
 ```bash
-# 激活 Conda 环境
-conda activate thesis_env
+# 1. 克隆项目
+git clone https://github.com/your-username/five-system-disease-agent.git
+cd five-system-disease-agent
 
-# 安装依赖
+# 2. 创建环境
+conda create -n thesis_env python=3.11
+conda activate thesis_env
 pip install -r requirements.txt
 
-# 设置 API Key
-echo "DASHSCOPE_API_KEY=your_key" > .env
+# 3. 配置 API Key
+cp .env.example .env
+# 编辑 .env，填入你的 DASHSCOPE_API_KEY
+
+# 4. 运行（Windows）
+start.bat          # 激活环境并加载 .env
+python run_auto_analysis.py
 ```
 
-### 2. 使用启动脚本
+## 数据集白名单扩充
 
 ```bash
-# Windows: 双击或运行
-start.bat
-
-# 这会自动：
-# - 激活 Conda 环境
-# - 加载 API Key
-# - 打开配置好的命令行
+# 从 NCBI GEO 自动筛选人类表达谱数据集，追加到 data/geo_whitelist.csv
+python fetch_geo_whitelist.py
 ```
-
-### 3. 下载 GPL 平台文件（推荐，一次性）
-
-```bash
-# 批量下载所有常用 GPL 平台文件
-python download_gpl_platforms.py --action download
-
-# 这会下载 17 个常用平台到 data/gpl_platforms/
-# 以后分析时会自动使用本地文件，不需要重复下载
-```
-
-### 4. 测试数据下载（可选）
-
-```bash
-# 测试下载单个数据集
-python test_geo_downloader.py --test single --gse GSE2034
-
-# 检查已有数据集
-python test_geo_downloader.py --test check
-
-# 批量下载测试
-python test_geo_downloader.py --test batch
-```
-
-### 5. 运行分析
-
-```bash
-# 单次自动分析（智能体自动选择数据集并下载）
-python run_auto_analysis.py --mode single
-
-# 批量分析所有数据集
-python run_auto_analysis.py --mode batch
-
-# 批量分析最多 3 个数据集
-python run_auto_analysis.py --mode batch --max 3
-
-# 不使用 LLM（仅规则引擎）
-python run_auto_analysis.py --mode single --no-llm
-```
-
-**注意**: 智能体会自动检查数据集是否存在，如果不存在会自动从 GEO 数据库下载。
 
 ## 项目结构
 
 ```
-五维分类/
-├── src/                          # 源代码
-│   ├── agent/                    # 智能体（核心）
-│   │   ├── disease_analysis_agent.py   # 主智能体
-│   │   ├── disease_selector.py         # 疾病选择
-│   │   ├── llm_integration.py          # LLM 集成
-│   │   ├── analysis_strategies.py      # 分析策略
-│   │   ├── config.py                   # 配置
-│   │   └── logger.py                   # 日志
-│   ├── classification/           # 分类引擎
-│   │   └── five_system_classifier.py
-│   ├── analysis/                 # 分析模块
-│   │   ├── ssgsea_validator.py
-│   │   ├── semantic_similarity.py
-│   │   └── clustering_quality_evaluator.py
-│   ├── models/                   # 数据模型
-│   ├── preprocessing/            # 数据预处理
-│   ├── visualization/            # 可视化
-│   └── config/                   # 全局配置
-│
-├── data/                         # 数据
-│   ├── gene_sets/                # 基因集
-│   ├── validation_datasets/      # 验证数据集
-│   ├── go_annotations/           # GO 注释
-│   └── kegg_mappings/            # KEGG 映射
-│
-├── results/                      # 结果输出
-│   └── agent_analysis/           # 智能体分析结果
-│
-├── logs/                         # 日志文件
-│
-├── archive/                      # 归档文件
-│   ├── old_docs/                 # 旧文档
-│   ├── old_tests/                # 旧测试
-│   └── legacy_analysis/          # 旧分析脚本
-│
-├── README.md                     # 本文档
-├── requirements.txt              # 依赖
-├── start.bat                     # 启动脚本
-└── run_auto_analysis.py          # 自动分析主程序
-```
+src/
+├── agent/                    # ★ 核心 Agent 逻辑
+│   ├── disease_analysis_agent.py  # LangGraph 工作流定义（11节点）
+│   ├── disease_selector.py        # 疾病选择 Agent
+│   ├── llm_integration.py         # DashScope LLM 封装
+│   ├── plot_generator.py          # matplotlib/seaborn 可视化
+│   ├── config.py                  # 数据集白名单 + 参数配置
+│   ├── analysis_strategies.py     # 分析策略定义
+│   ├── geo_validator.py           # GEO 数据集预验证
+│   └── logger.py                  # 日志配置
+├── classification/           # 五大系统基因分类器
+├── analysis/                 # ssGSEA 实现、语义分析
+├── preprocessing/            # GO/KEGG 注释解析
+├── visualization/            # 报告导出
+└── data_extraction/          # GEO 数据下载器
 
-## 智能体工作流
+data/
+├── gpl_platforms/            # 本地 GPL 平台注释文件
+├── geo_whitelist.csv         # 自动筛选的 GEO 数据集白名单
+└── validation_datasets/      # 已下载的数据集
 
-```
-疾病选择智能体
-    ↓
-扫描已分析数据集 → 分析覆盖度 → LLM/规则引擎决策
-    ↓
-推荐下一个数据集
-    ↓
-疾病分析智能体 (11 节点工作流)
-    ↓
-1. 提取元数据 → 2. 决策策略 → 3. 下载数据 (自动从 GEO 下载)
-    ↓
-4. 预处理 → 5. 基因分类 → 6. ssGSEA 分析
-    ↓
-7. 决策可视化 → 8. 生成图表 → 9. 结果解读
-    ↓
-10. 生成报告 → 11. 导出 PDF
-```
-
-### 数据下载说明
-
-智能体在第 3 步会自动处理数据：
-
-1. **检查本地**: 首先检查 `data/validation_datasets/` 是否已有数据
-2. **自动下载**: 如果数据不存在，自动从 NCBI GEO 数据库下载
-   - Series matrix 文件 (表达数据)
-   - Platform 注释文件 (基因注释)
-3. **验证完整性**: 确保下载的文件完整可用
-4. **继续分析**: 下载完成后自动进入预处理步骤
-
-**下载来源**: https://ftp.ncbi.nlm.nih.gov/geo/
-
-## 可用数据集
-
-| 数据集 ID | 疾病名称 | 类型 | 预期系统 |
-|-----------|----------|------|----------|
-| GSE122063 | 阿尔兹海默症 | neurodegenerative | D, A |
-| GSE2034 | 乳腺癌 | cancer | A, B, E |
-| GSE26168 | 糖尿病 | metabolic | C, D |
-| GSE21899 | 戈谢病 | metabolic | C, D |
-| GSE28914 | 伤口愈合 | repair | A, B |
-| GSE50425 | 伤口愈合扩展 | repair | A, B |
-| GSE65682 | 脓毒症 | infection | B, C |
-
-## 输出结果
-
-### 分析报告
-```
-results/agent_analysis/GSE2034/
-├── GSE2034_report.md             # Markdown 报告
-├── summary.json                  # 分析摘要
-└── figures/                      # 图表
-    ├── heatmap.png
-    ├── boxplot.png
-    └── volcano.png
-```
-
-### 日志文件
-```
-logs/
-├── auto_analysis_20240313_143022.log
-└── agent_execution.log
+tests/                        # 调试脚本
+results/agent_analysis/       # 分析输出（报告、图表、JSON）
 ```
 
 ## 技术栈
 
-- **Python 3.9+**
-- **LangGraph**: 智能体工作流框架
-- **DashScope**: 阿里云百炼 LLM (qwen-plus)
-- **NumPy/Pandas**: 数据处理
-- **Matplotlib/Seaborn**: 可视化
-
-## 开发说明
-
-### 添加新数据集
-
-编辑 `src/agent/config.py`:
-
-```python
-DATASETS = {
-    'GSE_NEW': {
-        'name': 'Disease Name',
-        'chinese_name': '疾病名称',
-        'disease_type': 'cancer',  # 或 metabolic, neurodegenerative 等
-        'expected_systems': ['System A', 'System B'],
-        'description': '疾病描述'
-    }
-}
-```
-
-### 自定义分析策略
-
-编辑 `src/agent/analysis_strategies.py` 添加新的分析子图。
-
-### 修改 LLM 配置
-
-编辑 `src/agent/config.py`:
-
-```python
-LLM_CONFIG = {
-    'provider': 'dashscope',
-    'model': 'qwen-plus',  # 或 qwen-turbo, qwen-max
-    'temperature': 0.3,
-    'max_tokens': 2000
-}
-```
-
-## 故障排查
-
-### 问题 1: API Key 未设置
-
-```bash
-# 检查
-echo $env:DASHSCOPE_API_KEY
-
-# 设置
-echo "DASHSCOPE_API_KEY=your_key" > .env
-```
-
-### 问题 2: 依赖缺失
-
-```bash
-pip install -r requirements.txt
-```
-
-### 问题 3: 数据文件不存在
-
-检查 `data/validation_datasets/` 目录是否包含数据集文件。
+| 组件 | 技术 |
+|------|------|
+| Agent 框架 | LangGraph |
+| LLM | Qwen3.5-122B (DashScope) |
+| 基因分析 | 自实现 ssGSEA |
+| 数据来源 | NCBI GEO |
+| 可视化 | matplotlib / seaborn |
+| 基因注释 | GO / KEGG |
 
 ## 许可证
 
-本项目用于学术研究。
-
-## 联系方式
-
-如有问题，请查看 `archive/old_docs/` 中的详细文档。
+MIT

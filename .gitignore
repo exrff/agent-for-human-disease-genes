@@ -44,6 +44,14 @@ logs/
 results/
 cache/
 
+# 数据集（体积过大）
+data/validation_datasets/
+data/gene_sets/
+data/go_annotations/
+data/kegg_mappings/
+data/ontology/
+# geo_whitelist.csv 和 gpl_platforms/ 保留上传（小文件，对复现有用）
+
 # 临时文件
 *.tmp
 *.bak
