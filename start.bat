@@ -34,9 +34,12 @@ REM Load environment variables from .env file
 echo [2/2] 加载环境变量...
 if exist .env (
     for /f "usebackq tokens=1,* delims==" %%a in (".env") do (
-        REM Skip empty lines and comments
-        if not "%%a"=="" if not "%%a"=="#" (
-            set "%%a=%%b"
+        REM Skip empty lines and comments (lines starting with #)
+        set "_line=%%a"
+        if not "!_line!"=="" (
+            if "!_line:~0,1!" neq "#" (
+                set "%%a=%%b"
+            )
         )
     )
     echo     [OK] API Key 已从 .env 文件加载

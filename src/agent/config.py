@@ -101,18 +101,7 @@ class AgentConfig:
             'description': '类风湿关节炎滑膜组织，免疫激活与代谢重编程',
             'platform': 'GPL570', 'n_samples': 80,
         },
-        'GSE37463': {
-            'name': 'Multiple Sclerosis',
-            'chinese_name': '多发性硬化症',
-            'disease_type': 'autoimmune',
-            'expected_strategy': 'case_control',
-            'expected_systems': ['System B', 'System D', 'System A'],
-            'description': '多发性硬化症外周血，神经免疫轴',
-            'platform': 'GPL6244', 'n_samples': 140,
-        },
-
-        # ── 心血管疾病 ────────────────────────────────────────────────────
-        'GSE57338': {
+        'GSE10325': {
             'name': 'Heart Failure',
             'chinese_name': '心力衰竭',
             'disease_type': 'cardiovascular',

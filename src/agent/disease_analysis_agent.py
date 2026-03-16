@@ -962,9 +962,9 @@ def generate_report(state: AnalysisState) -> AnalysisState:
 
 ## 2. 数据处理
 
-- **样本数量**: {state.get('sample_metadata', {}).get('sample_count', 'Unknown')}
-- **基因数量**: {classification_results.get('total_genes', 'Unknown')}
-- **分类基因**: {classification_results.get('classified', 'Unknown')}
+- **样本数量**: {(state.get('sample_metadata') or {}).get('sample_count', 'Unknown')}
+- **基因数量**: {(classification_results or {}).get('total_genes', 'Unknown')}
+- **分类基因**: {(classification_results or {}).get('classified', 'Unknown')}
 
 ## 3. 五大系统分类结果
 
@@ -1187,8 +1187,16 @@ def create_disease_analysis_graph():
         }
     )
     
-    workflow.add_edge("download", "preprocess")
-    workflow.add_edge("preprocess", "classify")
+    workflow.add_conditional_edges(
+        "download",
+        lambda s: "preprocess" if s.get("raw_data_path") else "export_pdf",
+        {"preprocess": "preprocess", "export_pdf": "export_pdf"}
+    )
+    workflow.add_conditional_edges(
+        "preprocess",
+        lambda s: "classify" if s.get("expression_matrix") is not None else "export_pdf",
+        {"classify": "classify", "export_pdf": "export_pdf"}
+    )
     workflow.add_edge("classify", "ssgsea")
     workflow.add_edge("ssgsea", "decide_visualization")
     workflow.add_edge("decide_visualization", "generate_plots")
