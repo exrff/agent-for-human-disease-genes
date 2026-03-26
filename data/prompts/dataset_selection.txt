@@ -1,0 +1,36 @@
+# 疾病数据集选择任务
+
+请你从候选数据集中选择下一个最值得分析的数据集。
+只能从候选列表中选择，返回的 selected_dataset_id 必须与候选列表完全一致。
+
+## 已分析数据集（__TOTAL_COUNT__ 个）
+
+__ANALYZED_DATASETS__
+
+## 已覆盖疾病类型
+__DISEASE_TYPES__
+
+## 系统激活统计
+__SYSTEM_COVERAGE__
+
+## 候选数据集（共 __UNANALYZED_COUNT__ 个，只能从此列表中选择）
+
+__UNANALYZED_DATASETS__
+
+## 选择原则
+1. 优先补足尚未覆盖的疾病类型
+2. 优先补足覆盖较弱的系统维度
+3. 尽量兼顾样本量、代表性和分析价值
+4. 必须从候选列表中选择，不允许虚构 dataset_id
+
+## 输出格式
+
+```json
+{
+    "selected_dataset_id": "候选列表中的 dataset_id",
+    "reasoning": "2-3句选择原因",
+    "expected_insights": "预计能补充的价值"
+}
+```
+
+只返回 JSON，不要输出额外解释。

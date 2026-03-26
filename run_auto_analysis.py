@@ -27,7 +27,7 @@ if _env_file.exists():
                 _k, _, _v = _line.partition('=')
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-from src.agent.disease_selector import DiseaseSelector
+from src.agent.dataset_selector_service import DiseaseSelector
 from src.agent.disease_analysis_agent import run_disease_analysis
 
 
@@ -75,6 +75,7 @@ def run_single_analysis(use_llm: bool = True):
     logger.info("步骤 2: 运行分析...")
     try:
         run_disease_analysis(dataset_id, dataset_info=selected)
+        # 这里把selected（选择器选择的理由作为信息传给了分析器，是很典型的“上游节点给下游节点传富上下文”的 Agent 设计。）
         logger.info(f"✅ {dataset_id} 分析完成")
         return True
     except Exception as e:

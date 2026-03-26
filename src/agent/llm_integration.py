@@ -13,6 +13,13 @@ import json
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
+from .prompts import (
+    build_analysis_strategy_prompt,
+    build_report_summary_prompt,
+    build_result_interpretation_prompt,
+    build_visualization_strategy_prompt,
+)
+
 
 class LLMIntegration:
     """LLM 集成类 - 支持多种提供商"""
@@ -487,6 +494,107 @@ ssGSEA 分析结果（14个子类的激活得分）：
 
 
 # 便捷函数
+    def decide_analysis_strategy(self, dataset_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Use centralized prompt builder for strategy selection."""
+        prompt = build_analysis_strategy_prompt(dataset_info)
+
+        try:
+            result_text = self._generate_content(prompt)
+
+            if "```json" in result_text:
+                result_text = result_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in result_text:
+                result_text = result_text.split("```")[1].split("```")[0].strip()
+
+            result = json.loads(result_text)
+            result['llm_used'] = True
+            result['timestamp'] = datetime.now().isoformat()
+            return result
+
+        except Exception as e:
+            print(f"Strategy decision failed: {e}")
+            return self._fallback_strategy_decision(dataset_info)
+
+    def decide_visualization_strategy(
+        self,
+        analysis_strategy: str,
+        data_characteristics: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Use centralized prompt builder for visualization recommendations."""
+        prompt = build_visualization_strategy_prompt(
+            analysis_strategy,
+            data_characteristics,
+        )
+
+        try:
+            result_text = self._generate_content(prompt)
+
+            if "```json" in result_text:
+                result_text = result_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in result_text:
+                result_text = result_text.split("```")[1].split("```")[0].strip()
+
+            result = json.loads(result_text)
+            result['llm_used'] = True
+            return result
+
+        except Exception as e:
+            print(f"Visualization decision failed: {e}")
+            return self._fallback_visualization_decision(analysis_strategy)
+
+    def interpret_results(
+        self,
+        dataset_info: Dict[str, Any],
+        ssgsea_scores: Dict[str, Any],
+        statistical_results: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """Use centralized prompt builder for result interpretation."""
+        score_summary = self._prepare_score_summary(ssgsea_scores)
+        prompt = build_result_interpretation_prompt(
+            dataset_info,
+            score_summary,
+            statistical_results,
+        )
+
+        try:
+            interpretation = self._generate_content(prompt)
+            interpretation = f"""# é’å—˜ç€½ç¼æ’´ç‰ç‘™ï½ˆî‡°
+
+**éç‰ˆåµé—†?*: {dataset_info.get('chinese_name', 'Unknown')} ({dataset_info.get('name', 'Unknown')})
+**é’å—˜ç€½éƒå •æ£¿**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**ç‘™ï½ˆî‡°å¦¯â€³ç€·**: {self.model} ({self.provider})
+
+---
+
+{interpretation}
+
+---
+
+*éˆî„ƒÐ’ç’‡è¤æ•± AI æˆå‘­å§ªé¢ç†¸åžšé”›å±½ç¼“ç’î†¾ç²¨éšå œç¬“æ¶“æ°±ç…¡ç’‡å—šç¹˜ç›å²„ç™ç’‡ä½µâ‚¬?
+"""
+            return interpretation
+
+        except Exception as e:
+            print(f"Interpretation failed: {e}")
+            return self._fallback_interpretation(dataset_info, ssgsea_scores)
+
+    def generate_report_summary(
+        self,
+        dataset_info: Dict[str, Any],
+        analysis_results: Dict[str, Any]
+    ) -> str:
+        """Use centralized prompt builder for report summaries."""
+        prompt = build_report_summary_prompt(dataset_info, analysis_results)
+
+        try:
+            return self._generate_content(prompt)
+        except Exception as e:
+            print(f"Report summary failed: {e}")
+            return (
+                f"éˆî„‚çˆºç»Œè·ºî‡® {dataset_info.get('chinese_name', 'Unknown')} "
+                f"éç‰ˆåµé—†å—šç¹˜ç›å±¼ç°¡æµœæ–¿ã‡é”ç†»å…˜ç»¯è¤ç²ºé’å—™è¢«é’å—˜ç€½éŠ†?"
+            )
+
 def create_llm_integration(api_key: Optional[str] = None, 
                           model: Optional[str] = None,
                           provider: Optional[str] = None) -> LLMIntegration:

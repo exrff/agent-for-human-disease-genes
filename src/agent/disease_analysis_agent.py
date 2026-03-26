@@ -122,7 +122,7 @@ def decide_analysis_strategy(state: AnalysisState) -> AnalysisState:
     
     # 尝试使用 LLM 决策
     try:
-        from .llm_integration import create_llm_integration
+        from .llm_client import create_llm_integration
         from .config import AgentConfig
         
         llm = create_llm_integration()
@@ -802,7 +802,7 @@ def decide_visualization(state: AnalysisState) -> AnalysisState:
     ALWAYS_INCLUDE = ['radar', 'barplot']  # 这两个始终生成
 
     try:
-        from .llm_integration import create_llm_integration
+        from .llm_client import create_llm_integration
         llm = create_llm_integration()
 
         data_characteristics = {
@@ -894,7 +894,7 @@ def interpret_results(state: AnalysisState) -> AnalysisState:
     
     # 使用 LLM 解读结果
     try:
-        from .llm_integration import create_llm_integration
+        from .llm_client import create_llm_integration
         
         llm = create_llm_integration()
         

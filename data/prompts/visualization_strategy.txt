@@ -1,0 +1,26 @@
+请你作为生物信息学可视化顾问，根据分析策略和数据特点推荐最合适的图表方案。
+
+分析策略: __ANALYSIS_STRATEGY__
+
+数据特点:
+__DATA_CHARACTERISTICS__
+
+可选图表类型
+- heatmap
+- boxplot
+- volcano
+- time_series
+- clustering
+- network
+- correlation_heatmap
+- trajectory
+
+请只返回 JSON，格式如下：
+{
+    "primary_visualizations": ["最推荐的图表"],
+    "secondary_visualizations": ["可选补充图表"],
+    "reasoning": "简要解释",
+    "layout_suggestions": "版式建议"
+}
+
+不要输出 Markdown 代码块，不要输出额外解释。

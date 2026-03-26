@@ -1,0 +1,25 @@
+请你作为疾病转录组分析助手，根据下面的数据集信息选择最合适的分析策略。
+
+数据集信息
+- ID: __DATASET_ID__
+- 英文名称: __NAME__
+- 中文名称: __CHINESE_NAME__
+- 疾病类型: __DISEASE_TYPE__
+- 描述: __DESCRIPTION__
+
+可选分析策略
+1. case_control - 适合病例组与对照组比较
+2. subtype_comparison - 适合同病不同亚型比较
+3. time_series - 适合时间序列或阶段性变化分析
+4. correlation - 适合变量相关性或连续表型分析
+
+请只返回 JSON，格式如下：
+{
+    "strategy": "选择的策略",
+    "reasoning": "2-3句简洁说明",
+    "confidence": 0.0,
+    "secondary_analyses": ["可选补充分析"],
+    "key_focus": ["建议重点关注的方向"]
+}
+
+不要输出 Markdown 代码块，不要输出额外解释。

@@ -16,6 +16,8 @@ from typing import Dict, List, Any, Optional
 from pathlib import Path
 from datetime import datetime
 
+from .prompts import build_dataset_selection_prompt
+
 
 class DiseaseSelector:
     """疾病选择智能体"""
@@ -165,7 +167,7 @@ class DiseaseSelector:
         LLM 只做"选哪个"的决策，不允许自由推荐白名单外的 GSE 编号。
         """
         try:
-            from .llm_integration import create_llm_integration
+            from .llm_client import create_llm_integration
             llm = create_llm_integration()
 
             analyzed_ids = {d['dataset_id'] for d in analyzed['datasets']}
@@ -341,6 +343,14 @@ class DiseaseSelector:
 """
         return prompt
     
+    def _build_selection_prompt(
+        self,
+        analyzed: Dict[str, Any],
+        unanalyzed: List[Dict[str, Any]]
+    ) -> str:
+        """Centralized dataset-selection prompt builder."""
+        return build_dataset_selection_prompt(analyzed, unanalyzed)
+
     def run(self, use_llm: bool = True) -> Optional[Dict[str, Any]]:
         """
         运行疾病选择智能体

@@ -1,0 +1,26 @@
+请你作为疾病组学研究顾问，结合 ssGSEA 结果和统计信息，生成一段结构清晰、可直接写入报告的结果解读。
+
+数据集信息
+- 英文名称: __NAME__
+- 中文名称: __CHINESE_NAME__
+- 疾病类型: __DISEASE_TYPE__
+- 描述: __DESCRIPTION__
+
+五维分类体系
+- System A: A1, A2, A3, A4
+- System B: B1, B2, B3
+- System C: C1, C2, C3
+- System D: D1, D2
+- System E: E1, E2
+
+ssGSEA 分数摘要
+__SCORE_SUMMARY__
+
+统计结果
+__STATISTICAL_RESULTS__
+
+请用中文输出，内容包含：
+1. 2-3条核心发现
+2. 2-3条生物学意义或机制解释
+3. 1-2条局限性或谨慎解读
+4. 1段简短总结
