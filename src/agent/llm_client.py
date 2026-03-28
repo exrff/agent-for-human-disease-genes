@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LLM integration layer backed by external prompt templates."""
+"""LLM client with prompt rendering and trace capture."""
 
 import json
 import os
@@ -25,19 +25,20 @@ class LLMClient:
     ) -> None:
         self.provider = provider.lower()
         self.model = model
+        self._last_trace: Dict[str, Any] = {}
 
         if self.provider == "dashscope":
             self.api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
             if not self.api_key:
                 raise ValueError(
-                    "Missing DashScope API key. Set DASHSCOPE_API_KEY or pass api_key."
+                    "缺少 DashScope API key，请设置 DASHSCOPE_API_KEY 或显式传入 api_key。"
                 )
             self.dashscope_base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
         elif self.provider == "google":
             self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
             if not self.api_key:
                 raise ValueError(
-                    "Missing Google API key. Set GOOGLE_API_KEY or pass api_key."
+                    "缺少 Google API key，请设置 GOOGLE_API_KEY 或显式传入 api_key。"
                 )
             self._init_google()
         else:
@@ -48,11 +49,38 @@ class LLMClient:
             import google.generativeai as genai
         except ImportError as exc:
             raise ImportError(
-                "Missing Google Generative AI SDK. Install with: pip install google-generativeai"
+                "缺少 Google Generative AI SDK，请先执行: pip install google-generativeai"
             ) from exc
 
         genai.configure(api_key=self.api_key)
         self.model_instance = genai.GenerativeModel(self.model)
+
+    def _set_trace(
+        self,
+        *,
+        operation: str,
+        prompt: str,
+        response_text: Optional[str] = None,
+        parsed_response: Optional[Any] = None,
+        status: str = "success",
+        error: Optional[str] = None,
+        fallback_used: bool = False,
+    ) -> None:
+        self._last_trace = {
+            "operation": operation,
+            "provider": self.provider,
+            "model": self.model,
+            "timestamp": datetime.now().isoformat(),
+            "status": status,
+            "fallback_used": fallback_used,
+            "prompt": prompt,
+            "response_text": response_text,
+            "parsed_response": parsed_response,
+            "error": error,
+        }
+
+    def get_last_trace(self) -> Dict[str, Any]:
+        return dict(self._last_trace)
 
     def _generate_content(self, prompt: str) -> str:
         if self.provider == "dashscope":
@@ -104,13 +132,29 @@ class LLMClient:
     def decide_analysis_strategy(self, dataset_info: Dict[str, Any]) -> Dict[str, Any]:
         prompt = build_analysis_strategy_prompt(dataset_info)
         try:
-            result = self._parse_json_response(self._generate_content(prompt))
+            response_text = self._generate_content(prompt)
+            result = self._parse_json_response(response_text)
             result["llm_used"] = True
             result["timestamp"] = datetime.now().isoformat()
+            self._set_trace(
+                operation="decide_analysis_strategy",
+                prompt=prompt,
+                response_text=response_text,
+                parsed_response=result,
+            )
             return result
         except Exception as exc:
             print(f"Strategy decision failed: {exc}")
-            return self._fallback_strategy_decision(dataset_info)
+            fallback = self._fallback_strategy_decision(dataset_info)
+            self._set_trace(
+                operation="decide_analysis_strategy",
+                prompt=prompt,
+                parsed_response=fallback,
+                status="fallback",
+                error=str(exc),
+                fallback_used=True,
+            )
+            return fallback
 
     def decide_visualization_strategy(
         self,
@@ -122,12 +166,28 @@ class LLMClient:
             data_characteristics,
         )
         try:
-            result = self._parse_json_response(self._generate_content(prompt))
+            response_text = self._generate_content(prompt)
+            result = self._parse_json_response(response_text)
             result["llm_used"] = True
+            self._set_trace(
+                operation="decide_visualization_strategy",
+                prompt=prompt,
+                response_text=response_text,
+                parsed_response=result,
+            )
             return result
         except Exception as exc:
             print(f"Visualization decision failed: {exc}")
-            return self._fallback_visualization_decision(analysis_strategy)
+            fallback = self._fallback_visualization_decision(analysis_strategy)
+            self._set_trace(
+                operation="decide_visualization_strategy",
+                prompt=prompt,
+                parsed_response=fallback,
+                status="fallback",
+                error=str(exc),
+                fallback_used=True,
+            )
+            return fallback
 
     def interpret_results(
         self,
@@ -144,7 +204,7 @@ class LLMClient:
 
         try:
             interpretation = self._generate_content(prompt)
-            return (
+            rendered = (
                 "# 分析结果解读\n\n"
                 f"**数据集**: {dataset_info.get('chinese_name', 'Unknown')} ({dataset_info.get('name', 'Unknown')})\n"
                 f"**分析时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
@@ -152,24 +212,57 @@ class LLMClient:
                 "---\n\n"
                 f"{interpretation}\n\n"
                 "---\n\n"
-                "*以上内容由 AI 生成，建议结合原始结果和领域知识进行复核。*\n"
+                "*以上内容由 AI 生成，建议结合原始结果进行复核。*\n"
             )
+            self._set_trace(
+                operation="interpret_results",
+                prompt=prompt,
+                response_text=interpretation,
+                parsed_response={"interpretation_preview": interpretation[:300]},
+            )
+            return rendered
         except Exception as exc:
             print(f"Interpretation failed: {exc}")
-            return self._fallback_interpretation(dataset_info)
+            fallback = self._fallback_interpretation(dataset_info)
+            self._set_trace(
+                operation="interpret_results",
+                prompt=prompt,
+                response_text=fallback,
+                parsed_response={"interpretation_preview": fallback[:300]},
+                status="fallback",
+                error=str(exc),
+                fallback_used=True,
+            )
+            return fallback
 
     def select_next_dataset(self, prompt: str) -> Dict[str, Any]:
         try:
-            result = self._parse_json_response(self._generate_content(prompt))
+            response_text = self._generate_content(prompt)
+            result = self._parse_json_response(response_text)
             result["llm_used"] = True
             result["timestamp"] = datetime.now().isoformat()
+            self._set_trace(
+                operation="select_next_dataset",
+                prompt=prompt,
+                response_text=response_text,
+                parsed_response=result,
+            )
             return result
         except Exception as exc:
-            return {
+            fallback = {
                 "selected_dataset_id": None,
-                "reasoning": f"LLM selection failed: {exc}",
+                "reasoning": f"LLM 选择失败: {exc}",
                 "llm_used": False,
             }
+            self._set_trace(
+                operation="select_next_dataset",
+                prompt=prompt,
+                parsed_response=fallback,
+                status="fallback",
+                error=str(exc),
+                fallback_used=True,
+            )
+            return fallback
 
     def generate_report_summary(
         self,
@@ -178,18 +271,35 @@ class LLMClient:
     ) -> str:
         prompt = build_report_summary_prompt(dataset_info, analysis_results)
         try:
-            return self._generate_content(prompt)
+            response_text = self._generate_content(prompt)
+            self._set_trace(
+                operation="generate_report_summary",
+                prompt=prompt,
+                response_text=response_text,
+                parsed_response={"summary_preview": response_text[:300]},
+            )
+            return response_text
         except Exception as exc:
             print(f"Report summary failed: {exc}")
-            return (
-                f"围绕 {dataset_info.get('chinese_name', 'Unknown')} 数据集完成了五维分类相关分析，"
-                "但自动摘要生成失败，请结合关键结果手动整理报告摘要。"
+            fallback = (
+                f"已完成 {dataset_info.get('chinese_name', 'Unknown')} 的五维分析，"
+                "但自动摘要生成失败，请结合详细结果手动整理摘要。"
             )
+            self._set_trace(
+                operation="generate_report_summary",
+                prompt=prompt,
+                response_text=fallback,
+                parsed_response={"summary_preview": fallback[:300]},
+                status="fallback",
+                error=str(exc),
+                fallback_used=True,
+            )
+            return fallback
 
     @staticmethod
     def _prepare_score_summary(ssgsea_scores: Dict[str, Any]) -> str:
         if not ssgsea_scores:
-            return "无"
+            return "无 ssGSEA 得分。"
 
         systems = {
             "A": ["A1", "A2", "A3", "A4"],
@@ -209,7 +319,7 @@ class LLMClient:
             if system_scores:
                 summary_lines.append(f"System {system}: {', '.join(system_scores)}")
 
-        return "\n".join(summary_lines) if summary_lines else "无"
+        return "\n".join(summary_lines) if summary_lines else "无 ssGSEA 得分。"
 
     @staticmethod
     def _fallback_strategy_decision(dataset_info: Dict[str, Any]) -> Dict[str, Any]:
@@ -224,10 +334,10 @@ class LLMClient:
         strategy = strategy_map.get(disease_type, "case_control")
         return {
             "strategy": strategy,
-            "reasoning": f"根据疾病类型 {disease_type} 使用默认策略。",
+            "reasoning": f"根据疾病类型 {disease_type} 使用默认分析策略。",
             "confidence": 0.7,
             "secondary_analyses": ["correlation"],
-            "key_focus": ["重点关注系统激活模式"],
+            "key_focus": ["系统激活模式"],
             "llm_used": False,
         }
 
@@ -242,7 +352,7 @@ class LLMClient:
         return {
             "primary_visualizations": viz_map.get(analysis_strategy, ["heatmap"]),
             "secondary_visualizations": [],
-            "reasoning": "根据分析策略使用默认可视化方案。",
+            "reasoning": "根据当前分析策略使用默认可视化方案。",
             "layout_suggestions": "单页纵向布局",
             "llm_used": False,
         }
@@ -252,7 +362,7 @@ class LLMClient:
         return (
             "# 分析结果解读\n\n"
             f"**数据集**: {dataset_info.get('chinese_name', 'Unknown')}\n\n"
-            "自动解读失败，但 ssGSEA 结果已经生成。建议结合得分、图表和实验背景做人工复核。\n"
+            "自动解读当前不可用，但 ssGSEA 得分和生成图表仍可用于人工复核。\n"
         )
 
 
@@ -263,7 +373,7 @@ def create_llm_integration(
 ) -> LLMClient:
     if provider is None or model is None:
         try:
-            from .config import AgentConfig
+            from .runtime_config import AgentConfig
 
             config = AgentConfig.LLM_CONFIG
             provider = provider or config.get("provider", "dashscope")

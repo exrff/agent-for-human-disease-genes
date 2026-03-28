@@ -1,180 +1,261 @@
-# 五维生物系统分类 · 疾病分析 Agent
+# 五维生物系统分类与自动疾病分析
 
-基于 **LangGraph** 构建的自主疾病基因组分析智能体。Agent 能够自动选择 GEO 数据集、执行 ssGSEA 分析、生成可视化报告，并通过 LLM 解读生物学意义。
+一个面向疾病转录组研究的自动化分析项目：以“五维功能系统分类”作为生物学解释框架，结合 GEO 数据获取、基因集映射、ssGSEA、可视化和 LLM 解读，形成从候选数据集选择到结果报告生成的端到端流程。
 
-## 项目亮点
+## 项目想解决什么问题
 
-- **LangGraph 多节点工作流**：11 个节点的有向图，涵盖数据下载 → 预处理 → 分类 → ssGSEA → 可视化 → LLM 解读 → 报告导出全流程
-- **自主数据集选择**：LLM 从 90+ 个人类疾病 GEO 数据集白名单中，根据已分析疾病的覆盖度和系统多样性，智能推荐下一个最有价值的数据集
-- **五大生物系统分类**：基于 GO/KEGG 注释，将基因组分类为修复(A)、免疫(B)、代谢(C)、神经调节(D)、生殖发育(E) 五大系统
-- **自实现 ssGSEA**：不依赖 gseapy，自行实现 single-sample GSEA 算法，对每个样本计算系统激活分数
-- **DashScope LLM 集成**：通过 OpenAI 兼容接口调用 Qwen 模型，完成数据集推荐、分析策略制定、结果解读三个环节
+常见的 GO / KEGG 分析虽然能给出大量富集条目，但在疾病研究里经常有两个痛点：
 
-## 架构
+- 条目很多，但难以形成系统层面的整体解释
+- 富集结果偏“分子过程罗列”，不容易直接映射到疾病机制、系统失衡和功能转归
 
-```
-run_auto_analysis.py          # 主入口
-│
-├── DiseaseSelector           # 疾病选择 Agent
-│   ├── 扫描已分析数据集
-│   ├── 从白名单(DATASETS + geo_whitelist.csv)获取候选
-│   └── LLM 推荐 / 规则引擎兜底
-│
-└── LangGraph 分析工作流
-    ├── extract_metadata      # 提取数据集元信息
-    ├── download_data         # 下载 series matrix（本地 GPL 优先）
-    ├── preprocess_data       # probe → gene 表达矩阵
-    ├── classify_genes        # 五大系统分类
-    ├── run_ssgsea            # ssGSEA 系统激活分数
-    ├── determine_strategy    # LLM 制定分析策略
-    ├── generate_visualizations # 雷达图/箱线图/热图等
-    ├── interpret_results     # LLM 生物学解读
-    ├── generate_report       # Markdown 报告
-    └── export_pdf            # 保存结果 + analysis_summary.json
+这个项目尝试用一个更高层的功能框架来组织生物学过程，把疾病样本的变化总结为五个核心系统的活性模式，再观察各个子类如何共同构成疾病表型。
+
+## 核心创新点
+
+### 1. 用“五维功能系统”重组生物过程解释
+
+项目把复杂的 GO / KEGG 过程映射到五个功能系统：
+
+- System A: 自愈与结构重建
+- System B: 免疫防御
+- System C: 能量与代谢稳态
+- System D: 认知调控 / 神经-内分泌控制
+- System E: 生殖与延续
+- System 0: 通用分子机器层
+
+同时进一步细分为 14 个功能子类，用于更精细地描述疾病的功能偏移模式。
+
+### 2. 不只做富集，还做系统级活性画像
+
+项目不是简单输出“哪些通路显著”，而是把表达矩阵映射到统一的子类基因集，再计算：
+
+- 14 个子类的活性得分
+- 5 大系统的聚合得分
+- Top / Bottom 子类模式
+- 疾病机制与系统失衡之间的对应关系
+
+### 3. 把分析流程做成真正可运行的自动化 Agent
+
+当前主链已经实现：
+
+- 自动从白名单中选择尚未分析的数据集
+- 自动下载 GEO 数据和 GPL 平台注释
+- 自动完成预处理、基因映射、分类和 ssGSEA
+- 自动生成图表、结构化日志和报告
+- 在配置了 API Key 时，自动调用 LLM 做策略判断和结果解读
+
+### 4. 结构化记录每个分析节点
+
+项目不是只输出最终报告，还会为每次运行保留结构化运行记录，包括：
+
+- 每个节点的开始时间、结束时间、耗时、状态
+- 关键计算结果摘要
+- LLM 调用 trace
+- 最终报告与摘要文件
+
+这让流程更适合复核、调试和方法学迭代。
+
+## 当前能力
+
+### 自动化分析能力
+
+- 数据集选择：从 `data/geo_whitelist.csv` 中选择候选数据集
+- 数据下载：自动获取 series matrix 和 GPL 注释
+- 数据预处理：解析 GEO matrix，完成 probe-to-gene 映射
+- 系统分类：将表达基因投射到 14 个功能子类
+- ssGSEA：计算子类和系统活性得分
+- 可视化：自动生成雷达图、热图、箱线图、条形图、相关性图
+- 报告生成：输出 Markdown 报告、JSON 摘要和结构化日志
+
+### LLM 增强能力
+
+在配置 API Key 后，LLM 可参与：
+
+- 分析策略决策
+- 可视化策略决策
+- 结果解释与报告文字生成
+- 数据集选择辅助
+
+当 LLM 不可用时，主流程会回退到规则引擎，保证分析仍可执行。
+
+## 结果产物
+
+每次分析完成后，会在 `results/agent_analysis/<GSE>/` 下输出：
+
+- `<GSE>_report.md`
+- `analysis_summary.json`
+- `run_log.json`
+- `node_events.jsonl`
+- `llm_traces/`
+- `figures/`
+
+这意味着项目既能给出“人能读的报告”，也能给出“程序能继续消费的结构化结果”。
+
+## 已完成的代表性结果
+
+这套框架已经被用于多类疾病数据的系统级分析，包括：
+
+- 乳腺癌
+- 阿尔茨海默病 / 神经退行性疾病
+- 糖尿病 / 代谢性疾病
+- 戈谢病
+- 创伤修复 / 伤口愈合
+- 脓毒症 / 感染相关疾病
+
+仓库中保留了两类结果：
+
+- `results/disease_analysis/`
+  历史手工疾病分析结果
+- `results/agent_analysis/`
+  当前自动 Agent 主链生成的结果
+
+## 当前主链架构
+
+主流程入口：
+
+- `run_auto_analysis.py`
+
+Agent 侧核心模块：
+
+- `src/agent/dataset_selector_service.py`
+- `src/agent/disease_analysis_agent.py`
+- `src/agent/analysis_nodes_data.py`
+- `src/agent/analysis_nodes_scoring.py`
+- `src/agent/analysis_nodes_reporting.py`
+- `src/agent/geo_parsing.py`
+- `src/agent/scoring_core.py`
+- `src/agent/llm_client.py`
+- `src/agent/prompts.py`
+- `src/agent/plot_generator.py`
+- `src/agent/runtime_config.py`
+- `src/agent/whitelist_repository.py`
+
+数据获取模块：
+
+- `src/data_extraction/geo_downloader.py`
+
+## 工作流程
+
+```text
+白名单候选数据集
+  -> 选择下一个待分析数据集
+  -> 下载 GEO 原始数据与 GPL 注释
+  -> 预处理并构建 gene-level expression matrix
+  -> 五维子类 / 系统分类
+  -> ssGSEA 活性计算
+  -> 生成可视化
+  -> LLM / 规则引擎解释结果
+  -> 导出报告与结构化日志
 ```
 
 ## 快速开始
 
-**环境要求**：Python 3.11，conda
-
 ```bash
-# 1. 克隆项目
-git clone https://github.com/your-username/five-system-disease-agent.git
-cd five-system-disease-agent
-
-# 2. 创建环境
 conda create -n thesis_env python=3.11
 conda activate thesis_env
 pip install -r requirements.txt
-
-# 3. 配置 API Key
-cp .env.example .env
-# 编辑 .env，填入你的 DASHSCOPE_API_KEY
-
-# 4. 运行（Windows）
-start.bat          # 激活环境并加载 .env
-python run_auto_analysis.py
+python run_auto_analysis.py --mode single
 ```
 
-## 数据集白名单扩充
+Windows 下也可以：
 
 ```bash
-# 从 NCBI GEO 自动筛选人类表达谱数据集，追加到 data/geo_whitelist.csv
-python fetch_geo_whitelist.py
+start.bat
+python run_auto_analysis.py --mode single
 ```
 
-## 项目结构
+## 白名单机制
 
+- 唯一白名单来源：`data/geo_whitelist.csv`
+- 自动分析当前只会从白名单中选择数据集
+- 不再依赖代码内静态 `DATASETS` 列表
+
+更新白名单：
+
+```bash
+python scripts/fetch_geo_whitelist.py
 ```
+
+## Prompt 设计
+
+Prompt 模板位于：
+
+- `data/prompts/`
+
+加载入口位于：
+
+- `src/agent/prompts.py`
+
+目前 prompt 主要用于：
+
+- 数据集选择
+- 分析策略决策
+- 可视化策略决策
+- 结果解读
+- 报告摘要生成
+
+## 仓库结构
+
+```text
 src/
-├── agent/                    # ★ 核心 Agent 逻辑
-│   ├── disease_analysis_agent.py  # LangGraph 工作流定义（11节点）
-│   ├── disease_selector.py        # 疾病选择 Agent
-│   ├── llm_integration.py         # DashScope LLM 封装
-│   ├── plot_generator.py          # matplotlib/seaborn 可视化
-│   ├── config.py                  # 数据集白名单 + 参数配置
-│   ├── analysis_strategies.py     # 分析策略定义
-│   ├── geo_validator.py           # GEO 数据集预验证
-│   └── logger.py                  # 日志配置
-├── classification/           # 五大系统基因分类器
-├── analysis/                 # ssGSEA 实现、语义分析
-├── preprocessing/            # GO/KEGG 注释解析
-├── visualization/            # 报告导出
-└── data_extraction/          # GEO 数据下载器
+  agent/
+    disease_analysis_agent.py      # LangGraph 编排器
+    analysis_nodes_data.py         # 元信息、下载、预处理
+    analysis_nodes_scoring.py      # 分类与 ssGSEA
+    analysis_nodes_reporting.py    # 解读、报告、导出
+    geo_parsing.py                 # GEO / GPL 解析辅助
+    scoring_core.py                # 共享打分核心
+    dataset_selector_service.py
+    llm_client.py
+    runtime_config.py
+    whitelist_repository.py
+    prompts.py
+    plot_generator.py
+    geo_validator.py
+  data_extraction/
+    geo_downloader.py
+
+scripts/
+  fetch_geo_whitelist.py          # 刷新统一 GEO 白名单
 
 data/
-├── gpl_platforms/            # 本地 GPL 平台注释文件
-├── geo_whitelist.csv         # 自动筛选的 GEO 数据集白名单
-└── validation_datasets/      # 已下载的数据集
+  geo_whitelist.csv
+  prompts/
+  validation_datasets/
+  gpl_platforms/
 
-tests/                        # 调试脚本
-results/agent_analysis/       # 分析输出（报告、图表、JSON）
+results/
+  disease_analysis/
+  agent_analysis/
+
+archive/
+  src_legacy/
+    scripts/
+      download_gpl_platforms.py   # 旧 GPL 批量下载脚本，已归档
 ```
 
-## 技术栈
+## 已归档的旧实现
 
-| 组件 | 技术 |
-|------|------|
-| Agent 框架 | LangGraph |
-| LLM | Qwen3.5-122B (DashScope) |
-| 基因分析 | 自实现 ssGSEA |
-| 数据来源 | NCBI GEO |
-| 可视化 | matplotlib / seaborn |
-| 基因注释 | GO / KEGG |
+以下旧模块已迁移到 `archive/src_legacy/agent/`：
 
-## 许可证
+- `config.py`
+- `disease_selector.py`
+- `llm_integration.py`
+- `analysis_strategies.py`
+- `logger.py`
 
-MIT
+以下历史目录也已迁移到 `archive/src_legacy/`：
 
-## 示例运行结果（GSE12288 · 冠状动脉疾病）
+- `analysis/`
+- `classification/`
+- `visualization/`
+- `models/`
+- `preprocessing/`
+- `config/`
 
-以下为对 [GSE12288](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE12288)（196例冠心病外周血，GPL96平台）的完整分析示例。
+## 说明
 
-### 运行过程
-
-```
-步骤 1: 疾病选择 Agent 扫描已分析数据集 → LLM 从白名单推荐 GSE12288
-        推荐理由: 未覆盖的 cardiovascular 类型，196大样本，与已有代谢/感染类数据互补
-
-步骤 2: 下载 series matrix（~12MB），从 data/gpl_platforms/ 加载本地 GPL96 注释
-
-步骤 3: probe → gene 映射，生成 13237 genes × 222 samples 表达矩阵
-
-步骤 4: 五大系统分类 → 8143/13237 基因匹配
-
-步骤 5: ssGSEA 计算 14 个子类激活分数
-
-步骤 6: LLM 制定分析策略 → 生成雷达图、柱状图、箱线图
-
-步骤 7: LLM 解读生物学意义 → 生成 Markdown 报告
-```
-
-总耗时约 **4分钟**（含两次 LLM 调用）。
-
-### 输出文件
-
-| 文件 | 说明 |
-|------|------|
-| `results/agent_analysis/GSE12288/analysis_summary.json` | 结构化结果（ssGSEA分数、top系统、元信息） |
-| `results/agent_analysis/GSE12288/GSE12288_report.md` | LLM生成的完整分析报告（含生物学解读） |
-| `results/agent_analysis/GSE12288/figures/` | 可视化图表（3张） |
-| `logs/auto_analysis_YYYYMMDD_HHMMSS.log` | 完整运行日志 |
-
-### 可视化图表
-
-**雷达图 — 五大系统激活分数**
-
-![radar](results/agent_analysis/GSE12288/figures/radar_system_scores.png)
-
-**柱状图 — 子类激活排名（Top 14）**
-
-![barplot](results/agent_analysis/GSE12288/figures/barplot_subcat_ranking.png)
-
-**箱线图 — 系统分数分布**
-
-![boxplot](results/agent_analysis/GSE12288/figures/boxplot_system_scores.png)
-
-### 主要发现（LLM 解读摘要）
-
-冠心病外周血呈现显著的**代谢-免疫双重激活**模式：
-
-- **System C（代谢）** 激活最强：C1 能量代谢(0.353)、C2 生物合成(0.314) 居所有子类之首
-- **System B（免疫）** 紧随其后：B1 先天免疫(0.317)、B3 免疫调节(0.278) 高度激活
-- **System D/E** 分数较低，提示外周血转录组改变集中于全身性代谢应激与固有免疫，而非神经/激素调节
-
-> 完整报告见 [`results/agent_analysis/GSE12288/GSE12288_report.md`](results/agent_analysis/GSE12288/GSE12288_report.md)
-
-### 日志格式示例
-
-日志保存在 `logs/auto_analysis_YYYYMMDD_HHMMSS.log`，记录每个节点的执行状态：
-
-```
-2026-03-16 11:02:01 - INFO - LLM 推荐数据集: GSE12288
-2026-03-16 11:02:01 - INFO - 推荐理由: 未覆盖的 cardiovascular 类型...
-2026-03-16 11:02:28 - INFO - ✅ Series matrix 下载成功: GSE12288_series_matrix.txt.gz
-2026-03-16 11:02:28 - INFO - ✓ 找到本地平台文件: GPL96-57554.txt
-2026-03-16 11:02:37 - INFO - ✓ 分类完成: 8143/13237 基因匹配到基因集
-2026-03-16 11:02:37 - INFO - ✓ ssGSEA 完成: 14 个子类
-2026-03-16 11:03:51 - INFO - ✓ 生成图表: radar_system_scores.png
-2026-03-16 11:04:43 - INFO - ✅ GSE12288 分析完成
-```
+- `src/agent/geo_validator.py` 目前仍保留，作为 GEO 预验证辅助工具
+- 当前主链已经切换到新的分层 Agent 结构
+- 结构化日志是当前版本的重要组成部分，便于调试、复核和后续扩展

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 
 PROMPTS_DIR = Path(__file__).resolve().parents[2] / "data" / "prompts"
+PRINCIPLES_FILE = PROMPTS_DIR / "System_Classification_Principles.txt"
 
 
 def _load_template(name: str) -> str:
@@ -17,6 +18,27 @@ def _render_template(name: str, replacements: Dict[str, str]) -> str:
     for key, value in replacements.items():
         template = template.replace(f"__{key}__", value)
     return template
+
+
+def _read_text_with_fallback(path: Path) -> str:
+    for encoding in ("utf-8", "utf-8-sig", "gb18030", "gbk"):
+        try:
+            return path.read_text(encoding=encoding)
+        except UnicodeDecodeError:
+            continue
+    return path.read_text(encoding="latin-1")
+
+
+def _load_compact_principles() -> str:
+    if not PRINCIPLES_FILE.exists():
+        return ""
+    content = _read_text_with_fallback(PRINCIPLES_FILE).strip()
+    if not content:
+        return ""
+    return (
+        "\n\n【五维分类短原则】\n"
+        f"{content}\n"
+    )
 
 
 def build_analysis_strategy_prompt(dataset_info: Dict[str, Any]) -> str:
@@ -54,7 +76,7 @@ def build_result_interpretation_prompt(
     score_summary: str,
     statistical_results: Optional[Dict[str, Any]] = None,
 ) -> str:
-    return _render_template(
+    prompt = _render_template(
         "result_interpretation.txt",
         {
             "NAME": str(dataset_info.get("name", "Unknown")),
@@ -69,6 +91,14 @@ def build_result_interpretation_prompt(
             ) if statistical_results else "无",
         },
     )
+    guidance = (
+        "\n\n【额外分析要求】\n"
+        "1. 不仅总结显著升高或突出的子类，也要关注显著偏低或持续低活性的子类，并讨论其是否提示功能缺失、抑制或退行性改变。\n"
+        "2. 优先讨论疾病发生机制与子类活性模式之间的关系，包括哪些结果支持该机制，哪些结果不完全支持或存在矛盾。\n"
+        "3. 聚焦“五维分类是否能够合理解释该疾病”的问题，但不得预设其一定正确；应同时说明支持证据、限制和替代解释。\n"
+        "4. 避免把相关性直接表述为因果性；如证据不足，请明确写成“提示”“可能”“需要进一步验证”。\n"
+    )
+    return prompt + _load_compact_principles() + guidance
 
 
 def build_report_summary_prompt(
@@ -80,7 +110,10 @@ def build_report_summary_prompt(
         {
             "CHINESE_NAME": str(dataset_info.get("chinese_name", "Unknown")),
             "ANALYSIS_STRATEGY": str(analysis_results.get("analysis_strategy", "Unknown")),
-            "KEY_FINDINGS": str(analysis_results.get("key_findings", [])),
+            "KEY_FINDINGS": json.dumps(
+                analysis_results.get("key_findings", []),
+                ensure_ascii=False,
+            ),
         },
     )
 
@@ -118,7 +151,7 @@ def build_dataset_selection_prompt(
             f"{dataset['description']}"
         )
 
-    return _render_template(
+    prompt = _render_template(
         "dataset_selection.txt",
         {
             "TOTAL_COUNT": str(analyzed.get("total_count", 0)),
@@ -129,3 +162,10 @@ def build_dataset_selection_prompt(
             "UNANALYZED_DATASETS": "\n".join(unanalyzed_lines),
         },
     )
+    selection_guidance = (
+        "\n\n【额外选择要求】\n"
+        "1. 优先选择最可能补充当前五维分类覆盖盲区的数据集。\n"
+        "2. 尽量选择能检验系统边界、子类边界或疾病机制解释力的数据集，而不只是重复已有模式。\n"
+        "3. 只能在候选列表中选择，不允许虚构数据集。\n"
+    )
+    return prompt + _load_compact_principles() + selection_guidance

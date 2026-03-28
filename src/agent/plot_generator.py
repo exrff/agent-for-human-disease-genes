@@ -24,6 +24,11 @@ import seaborn as sns
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
+from .scoring_core import (
+    build_subcategory_gene_sets as shared_build_subcategory_gene_sets,
+    compute_ssgsea_scores as shared_compute_ssgsea_scores,
+)
+
 logger = logging.getLogger(__name__)
 
 # ── 全局样式 ──────────────────────────────────────────────────────────────────
@@ -130,6 +135,16 @@ def _compute_ssgsea_scores(gene_expr_df, gene_set_genes: list, alpha: float = 0.
                 min_es = running
         scores.append(max_es if abs(max_es) >= abs(min_es) else min_es)
     return np.array(scores)
+
+
+def _build_subcategory_gene_sets() -> Dict[str, List[str]]:
+    """Compatibility wrapper that delegates to the shared scoring core."""
+    return shared_build_subcategory_gene_sets()
+
+
+def _compute_ssgsea_scores(gene_expr_df, gene_set_genes: list, alpha: float = 0.25) -> np.ndarray:
+    """Compatibility wrapper that delegates to the shared scoring core."""
+    return shared_compute_ssgsea_scores(gene_expr_df, gene_set_genes, alpha=alpha)
 
 
 def generate_all_plots(

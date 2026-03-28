@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .prompts import build_dataset_selection_prompt
+from .whitelist_repository import get_dataset_info, load_whitelist_datasets
 
 
 class DiseaseSelector:
@@ -30,9 +31,7 @@ class DiseaseSelector:
                 if not dataset_dir.is_dir():
                     continue
 
-                summary_file = dataset_dir / "summary.json"
-                if not summary_file.exists():
-                    summary_file = dataset_dir / "analysis_summary.json"
+                summary_file = dataset_dir / "analysis_summary.json"
                 if not summary_file.exists():
                     continue
 
@@ -41,6 +40,10 @@ class DiseaseSelector:
                         summary = json.load(fh)
                 except Exception as exc:
                     self.logger.warning(f"Failed reading {summary_file}: {exc}")
+                    continue
+
+                if not self._is_successful_summary(summary):
+                    self.logger.info(f"Skipping failed analysis summary: {summary_file}")
                     continue
 
                 dataset_id = dataset_dir.name
@@ -82,6 +85,9 @@ class DiseaseSelector:
                 if not dataset_id.startswith("GSE") or dataset_id in seen_ids:
                     continue
 
+                if not self._looks_like_valid_manual_dataset(folder):
+                    continue
+
                 seen_ids.add(dataset_id)
                 disease_type = self._lookup_disease_type(dataset_id)
                 analyzed["datasets"].append(
@@ -102,22 +108,37 @@ class DiseaseSelector:
         return analyzed
 
     @staticmethod
-    def _lookup_disease_type(dataset_id: str) -> Optional[str]:
-        try:
-            from .config import AgentConfig
+    def _is_successful_summary(summary: Dict[str, Any]) -> bool:
+        if summary.get("errors"):
+            return False
+        if not summary.get("classification_results"):
+            return False
+        if not summary.get("system_scores"):
+            return False
+        return True
 
-            info = AgentConfig.DATASETS.get(dataset_id)
-            if info:
-                return info.get("disease_type")
-        except Exception:
-            pass
+    @staticmethod
+    def _looks_like_valid_manual_dataset(folder: Path) -> bool:
+        series_files = list(folder.glob("*_series_matrix.txt.gz"))
+        platform_files = (
+            list(folder.glob("GPL*.annot.gz"))
+            + list(folder.glob("GPL*.txt"))
+            + list(folder.glob("GPL*.txt.gz"))
+            + list(folder.glob("GPL*.soft"))
+            + list(folder.glob("GPL*.soft.gz"))
+        )
+        return bool(series_files and platform_files)
+
+    @staticmethod
+    def _lookup_disease_type(dataset_id: str) -> Optional[str]:
+        info = get_dataset_info(dataset_id)
+        if info:
+            return info.get("disease_type")
         return None
 
     def get_available_datasets(self) -> List[Dict[str, Any]]:
-        from .config import AgentConfig
-
         available = []
-        for dataset_id, info in AgentConfig.get_all_datasets().items():
+        for dataset_id, info in load_whitelist_datasets().items():
             available.append(
                 {
                     "dataset_id": dataset_id,

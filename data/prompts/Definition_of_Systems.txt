@@ -1,0 +1,84 @@
+Five Functional Systems Definitions
+Classification Framework 
+Overall Classification Principle
+This study adopts a function-oriented classification strategy in which biological processes are categorized by the primary life-task (functional objective) they serve in an organism, rather than by organs, individual signaling pathways, or specific molecular entities.
+The central assumption is that molecular activities ultimately implement a limited number of core functional systems. These systems are defined by non-overlapping objectives (control, resource provision, defense, reconstruction, and lineage continuity) while remaining mechanistically coupled at molecular and cellular levels. When a pathway contains both destructive and constructive components, its components are separated and labeled by their dominant objective; shared molecular machinery is assigned to System 0.
+Operational criteria / annotation rules
+These definitions are implemented through objective-based annotation. Each pathway (or pathway component) is assigned to a system by its dominant functional objective (control, resource provision, defense, reconstruction, or lineage continuity), not by shared molecules, cell types, or anatomical location.
+When a pathway contains both destructive and constructive components, it is split into components and annotated separately; shared implementation machinery is assigned to System 0 unless it can be unambiguously reassigned by objective.
+For all inflammation-related processes, an orthogonal attribute 'inflammation_polarity' is annotated as one of {pro-inflammatory, anti-inflammatory, pro-resolving}. Pro-inflammatory denotes activation of inflammatory effectors; anti-inflammatory denotes suppression of inflammatory effectors primarily through immune self-limitation/tolerance; pro-resolving denotes active resolution programs that terminate inflammation and promote return to tissue homeostasis.
+System assignment and inflammation_polarity are not equivalent: system assignment is determined solely by the dominant functional objective (defense vs reconstruction), while inflammation_polarity is recorded as a secondary descriptor that supports component-level labeling and downstream quantification.
+Decision rules (implementation):
+* Assign to System B (B1/B2) when the dominant objective is threat recognition and clearance (e.g., PRR-driven activation, cytotoxicity, opsonization, pathogen killing), regardless of subsequent compensatory anti-inflammatory signals.
+* Assign to System B3 when the dominant objective is immune self-limitation/tolerance that reduces collateral damage without directly executing structural reconstruction.
+* Assign to System A4 when the dominant objective is inflammation resolution and damage containment coupled to restoration programs (e.g., efferocytosis and pro-resolving mediators together with ECM/angiogenesis/repair activation).
+* Assign to System A (A1-A3) for repair and somatic maintenance processes whose primary objective is structural restoration, independent of inflammatory polarity.
+System A: Self-Healing & Structural Reconstruction System
+Definition:
+System A (Self-Healing & Structural Reconstruction) comprises constructive biological processes that preserve or restore cellular and tissue integrity after damage from any source (intrinsic wear, metabolic/toxic stress, mechanical injury, pathogen-mediated injury, or immune-mediated collateral damage). Its functional objective is structural restoration and homeostatic reconstitution.
+System A is characterized by repair, renewal, quality control, and regeneration. By definition, it excludes threat recognition and threat elimination (System B) and excludes higher-order orchestration (System D) and energy/substrate provision (System C).
+Subcategories
+A1: Genomic Stability and Repair
+Processes that preserve genomic integrity and replication fidelity, including DNA damage sensing/repair, chromatin maintenance, telomere maintenance, and checkpoint control that prevents propagation of damaged genomes.
+A2: Somatic Maintenance, Turnover, and Identity Preservation
+Programs that maintain tissue function through controlled turnover and state maintenance, including stem/progenitor maintenance, differentiation and lineage stabilization, senescence programs, and homeostatic cell death used to remove irreparably damaged cells as a prerequisite for reconstruction (distinct from immune-mediated cytotoxic killing).
+A3: Cellular Homeostasis and Structural Maintenance
+Processes that maintain intracellular and membrane/organelle integrity, including proteostasis (protein folding and quality control), autophagy/mitophagy, organelle biogenesis and repair, membrane transport and ion homeostasis, and cytoskeletal/ECM support required for structural restoration.
+A4: Inflammation Resolution and Damage Containment (Pro-resolving Self-Healing)
+Processes that actively terminate inflammatory responses and contain damage to enable structural restoration, including clearance of inflammatory debris and apoptotic cells (efferocytosis), production of pro-resolving mediators, restoration of barrier and microenvironmental homeostasis, and coordinated transition to reconstruction programs; by objective, this category supports tissue homeostasis reconstitution rather than threat elimination.
+Operational criteria (what-to-measure):
+Quantify structural restoration capacity by measuring repair/reconstruction module activity and outcomes, including DNA repair competence, proteostasis and autophagy/mitophagy capacity, stem/progenitor activation and lineage stabilization, ECM remodeling and angiogenesis programs, and tissue functional recovery kinetics after injury. In addition, quantify pro-resolving self-healing (A4) via markers of inflammation resolution and damage containment (e.g., efferocytosis capacity, resolution mediator pathways, and coordinated shutdown of inflammatory signaling coupled to restoration programs), explicitly excluding pathogen/abnormal-cell clearance metrics.
+
+System B: Immune Defense System
+Definition:
+System B (Immune Defense) comprises biological processes specialized for detection, targeting, and elimination of external pathogens and abnormal endogenous elements (e.g., infected, transformed, or otherwise dangerous cells). Its functional objective is threat recognition and clearance through directed destructive actions.
+Subcategories
+B1: Innate Immunity
+Immediate, pattern-driven defense mechanisms, including barrier surveillance, pattern recognition, inflammatory signaling, phagocytosis, and rapid effector responses.
+B2: Adaptive Immunity
+Antigen-specific immune responses characterized by clonal selection, immune memory, and targeted effector mechanisms (cell-mediated cytotoxicity and antibody-mediated neutralization/clearance).
+B3: Immune Regulation, Tolerance, and Self-Limitation (Anti-inflammatory Immune Control)
+Programs that constrain immune-mediated collateral damage and prevent pathological overactivation while maintaining defensive readiness, including negative feedback control of inflammatory signaling, immune checkpoint regulation, tolerance mechanisms, and regulatory circuits that dampen destructive effector intensity; by objective, this category stabilizes System B rather than performing structural reconstruction (System A).
+Operational criteria (what-to-measure):
+Quantify threat recognition and clearance via directed destruction using indices of pattern recognition and inflammatory activation, interferon/cytokine effector load, phagocytic and complement activity, cytotoxic effector activation, antibody-mediated neutralization, and pathogen/abnormal-cell clearance efficiency, explicitly excluding structural restoration endpoints. In addition, quantify immune self-limitation and tolerance (B3) via readouts of immune-regulatory feedback that constrain destructive effectors (e.g., checkpoint/tolerance modules and negative-feedback signaling that reduces cytotoxicity and inflammatory output).
+System C: Energy & Metabolic Homeostasis System
+Definition:
+System C (Energy & Metabolic Homeostasis) includes biological processes responsible for acquiring, transforming, storing, and distributing energy and biochemical substrates, thereby maintaining systemic metabolic homeostasis and providing the material/energetic basis for all other systems. By definition, it does not perform threat elimination (System B) or structural reconstruction (System A), although it supplies their required resources.
+Subcategories
+C1: Energy Metabolism and Catabolism
+Degradative pathways involved in nutrient breakdown, redox balancing, and energy capture (ATP and reducing equivalents) across cellular and systemic contexts.
+C2: Biosynthesis and Anabolism
+Synthetic pathways that generate and allocate macromolecular building blocks (lipids, amino acids/proteins, nucleotides/nucleic acids, glycans) to sustain growth and maintenance demands.
+C3: Detoxification and Metabolic Stress Handling
+Biochemical transformation, neutralization, and elimination of xenobiotics and harmful endogenous metabolites (e.g., reactive intermediates), primarily via metabolic processing and excretory coupling; this category covers metabolic handling of toxicants rather than tissue reconstruction after injury.
+Operational criteria (what-to-measure):
+Quantify resource provision and metabolic stability by measuring ATP/bioenergetic efficiency, metabolic flux distribution (catabolic vs anabolic balance), redox homeostasis, nutrient utilization and storage dynamics, and detoxification throughput (xenobiotic/endometabolite biotransformation and excretory coupling), explicitly excluding defensive destruction and post-injury reconstruction outcomes.
+System D: Cognitive-Regulatory System (Neuro-Endocrine Control)
+Definition:
+System D (Cognitive每Regulatory; Neuro-Endocrine Control) is the organism-level information and control system that senses internal/external states, integrates signals, sets priorities, and coordinates other functional systems across time and space through neural, endocrine, and autonomic outputs.
+System D does not directly execute core metabolic transformations (System C), defensive destruction (System B), structural reconstruction (System A), or lineage propagation (System E); instead, it regulates when, where, and to what extent those systems are engaged.
+Subcategories
+D1: Neural Regulation and Signal Transmission
+Neural signaling, synaptic communication, sensor-motor integration, and rapid control loops enabling fast coordination and adaptive responses.
+D2: Endocrine and Autonomic Regulation
+Hormonal and autonomic signaling processes enabling systemic, longer-range, and slower but sustained control of physiological set-points and inter-system resource allocation.
+Operational criteria (what-to-measure):
+Quantify control and coordination performance by measuring sensory-to-effector information processing, autonomic balance and reflex gain, endocrine axis dynamics (set-point regulation and feedback-loop stability), circadian timing coherence, and cross-system coordination indices (timing/intensity allocation that modulates A每C and E), explicitly excluding direct metabolic transformations, immune killing, tissue rebuilding, or reproductive outputs.
+System E: Reproduction & Continuity System
+Definition:
+System E (Reproduction & Continuity) encompasses biological processes dedicated to germline production, genetic transmission across generations, and organismal development insofar as it serves reproductive capacity and lineage continuity. Its functional objective is species continuity rather than somatic survival.
+Subcategories
+E1: Reproduction
+Processes required for gametogenesis, reproductive endocrine function specific to reproduction, fertilization, implantation, gestation, parturition, and lactation where applicable.
+E2: Development and Reproductive Maturation
+Embryonic and postnatal developmental programs, sex differentiation, and tissue/organ maturation that establish reproductive competence and enable successful reproduction; somatic repair/regeneration unrelated to reproduction is assigned to System A.
+Operational criteria (what-to-measure):
+Quantify lineage continuity capacity by measuring gametogenesis and germline integrity, reproductive endocrine function specific to reproduction, fertility and reproductive success endpoints (fertilization/implantation/gestation where applicable), and developmental maturation programs required for reproductive competence, explicitly excluding somatic repair/regeneration not required for reproduction.
+
+System 0: General Molecular Machinery Layer (Non-functional System)
+Definition:
+System 0 (General Molecular Machinery Layer) is not a functional system but a shared implementation layer used by Systems A每E. It comprises molecular machinery required for execution (e.g., transcription/translation, replication, basic cytoskeletal and vesicular transport components) without an autonomous functional objective.
+This layer serves as the substrate upon which functional systems operate; therefore, its components are annotated as 'infrastructure' unless they can be unambiguously assigned to Systems A每E by objective.
+Operational note (System 0):
+Annotate System 0 components as infrastructure load/usage (e.g., transcription/translation/replication/vesicle transport capacity) and do not score them as functional outputs unless their activity can be unambiguously reassigned to Systems A每E by dominant objective.
+

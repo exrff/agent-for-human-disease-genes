@@ -11,6 +11,7 @@
 import os
 import sys
 import logging
+import shutil
 from pathlib import Path
 from datetime import datetime
 
@@ -50,6 +51,62 @@ def setup_logging():
     return logging.getLogger(__name__)
 
 
+def _remove_tree(path: Path, logger: logging.Logger) -> None:
+    if not path.exists():
+        return
+    shutil.rmtree(path, ignore_errors=False)
+    logger.info(f"已清理残留目录: {path}")
+
+
+def cleanup_failed_artifacts(dataset_id: str, logger: logging.Logger) -> None:
+    result_dir = Path("results/agent_analysis") / dataset_id
+    validation_root = Path("data/validation_datasets")
+
+    try:
+        _remove_tree(result_dir, logger)
+    except Exception as exc:
+        logger.warning(f"清理结果目录失败 {result_dir}: {exc}")
+
+    for folder in validation_root.glob(f"{dataset_id}*"):
+        if not folder.is_dir():
+            continue
+        try:
+            _remove_tree(folder, logger)
+        except Exception as exc:
+            logger.warning(f"清理数据目录失败 {folder}: {exc}")
+
+
+def purge_existing_failed_artifacts(logger: logging.Logger) -> None:
+    results_root = Path("results/agent_analysis")
+    if not results_root.exists():
+        return
+
+    purged = 0
+    for dataset_dir in results_root.iterdir():
+        if not dataset_dir.is_dir():
+            continue
+        summary_file = dataset_dir / "analysis_summary.json"
+        if not summary_file.exists():
+            continue
+        try:
+            import json
+
+            with open(summary_file, "r", encoding="utf-8") as fh:
+                summary = json.load(fh)
+        except Exception as exc:
+            logger.warning(f"读取摘要失败，跳过 {summary_file}: {exc}")
+            continue
+
+        if summary.get("errors"):
+            dataset_id = dataset_dir.name
+            logger.info(f"发现历史失败数据集，执行清理: {dataset_id}")
+            cleanup_failed_artifacts(dataset_id, logger)
+            purged += 1
+
+    if purged:
+        logger.info(f"已清理历史失败数据集 {purged} 个")
+
+
 def run_single_analysis(use_llm: bool = True):
     """运行单次分析"""
     logger = logging.getLogger(__name__)
@@ -74,11 +131,17 @@ def run_single_analysis(use_llm: bool = True):
     # 运行分析
     logger.info("步骤 2: 运行分析...")
     try:
-        run_disease_analysis(dataset_id, dataset_info=selected)
+        final_state = run_disease_analysis(dataset_id, dataset_info=selected)
         # 这里把selected（选择器选择的理由作为信息传给了分析器，是很典型的“上游节点给下游节点传富上下文”的 Agent 设计。）
+        if final_state.get("errors"):
+            logger.warning(f"⚠️ {dataset_id} 分析失败，开始清理残留目录")
+            cleanup_failed_artifacts(dataset_id, logger)
+            logger.warning(f"❌ {dataset_id} 分析失败: {'; '.join(final_state.get('errors', []))}")
+            return False
         logger.info(f"✅ {dataset_id} 分析完成")
         return True
     except Exception as e:
+        cleanup_failed_artifacts(dataset_id, logger)
         logger.error(f"❌ {dataset_id} 分析失败: {e}", exc_info=True)
         return False
 
@@ -130,6 +193,7 @@ def main():
     
     # 设置日志
     logger = setup_logging()
+    purge_existing_failed_artifacts(logger)
     
     # 检查 API Key
     use_llm = not args.no_llm

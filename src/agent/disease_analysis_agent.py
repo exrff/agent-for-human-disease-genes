@@ -1,870 +1,604 @@
 #!/usr/bin/env python3
-"""
-疾病分析智能体 - 基于 LangGraph 的自动化分析流程
+"""Workflow orchestrator for the active disease analysis pipeline."""
 
-功能：
-1. 自动下载疾病数据集
-2. 数据预处理和质量检查
-3. 五大系统分类
-4. ssGSEA 评估
-5. 智能绘图（根据数据特征选择可视化方式）
-6. 结果解读和报告生成
-7. PDF 报告输出
-8. 全程日志记录
-"""
-
-import os
 import json
-import logging
+import os
+import time
 from datetime import datetime
-from typing import TypedDict, Annotated, List, Dict, Any, Optional
-from pathlib import Path
+from typing import Any, Dict, List, Optional, TypedDict
 
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage, AIMessage
+from langgraph.graph import END, StateGraph
 
+from .analysis_nodes_data import (
+    download_dataset as data_download_dataset,
+    extract_dataset_metadata as data_extract_dataset_metadata,
+    preprocess_data as data_preprocess_data,
+)
+from .analysis_nodes_reporting import (
+    export_pdf as reporting_export_pdf,
+    generate_report as reporting_generate_report,
+    interpret_results as reporting_interpret_results,
+)
+from .analysis_nodes_scoring import (
+    classify_genes as scoring_classify_genes,
+    perform_ssgsea as scoring_perform_ssgsea,
+)
+from .geo_parsing import (
+    extract_gene_symbol_from_annotation as parsing_extract_gene_symbol_from_annotation,
+    extract_sample_info as parsing_extract_sample_info,
+    find_gpl_file as parsing_find_gpl_file,
+    map_probe_to_gene as parsing_map_probe_to_gene,
+    parse_gpl_annotation as parsing_parse_gpl_annotation,
+    parse_series_matrix as parsing_parse_series_matrix,
+    validate_series_matrix as parsing_validate_series_matrix,
+)
+from .scoring_core import (
+    SUBCATEGORY_NAMES,
+    SUBCATEGORY_TO_SYSTEM,
+    build_subcategory_gene_sets as shared_build_subcategory_gene_sets,
+    compute_ssgsea_scores as shared_compute_ssgsea_scores,
+)
 
-# ============================================================================
-# 状态定义
-# ============================================================================
 
 class AnalysisState(TypedDict):
-    """分析状态 - 贯穿整个工作流的状态对象"""
-    
-    # 输入信息
-    dataset_id: str  # 数据集ID (如 GSE2034)
-    dataset_info: Dict[str, Any]  # 数据集元信息
-    
-    # 数据路径
-    raw_data_path: Optional[str]  # 原始数据路径
-    processed_data_path: Optional[str]  # 处理后数据路径
-    
-    # 分析结果
-    expression_matrix: Optional[Any]  # 表达矩阵
-    sample_metadata: Optional[Dict]  # 样本元数据
-    classification_results: Optional[Dict]  # 分类结果
-    ssgsea_scores: Optional[Dict]  # ssGSEA 子类得分 {code: {mean_score, ...}}
-    system_scores: Optional[Dict]  # 五大系统汇总得分 {System A: float, ...}
-    statistical_results: Optional[Dict]  # 统计分析结果
-    
-    # 决策信息
-    disease_type: Optional[str]  # 疾病类型
-    analysis_strategy: Optional[str]  # 分析策略
-    visualization_plan: List[str]  # 可视化计划
-    
-    # 中间产物
-    metadata: Optional[Dict]  # 节点间传递的附加元数据
-    report_content: Optional[str]  # 报告正文（generate_report → export_pdf）
-    
-    # 输出
-    figures: List[str]  # 生成的图表路径
-    interpretation: Optional[str]  # 结果解读
-    report_path: Optional[str]  # 报告路径
-    
-    # 日志和错误
-    log_messages: List[str]  # 日志消息
-    errors: List[str]  # 错误信息
-    current_step: str  # 当前步骤
-    
-    # 控制流
-    needs_human_review: bool  # 是否需要人工审核
-    retry_count: int  # 重试次数
+    dataset_id: str
+    dataset_info: Dict[str, Any]
+    raw_data_path: Optional[str]
+    processed_data_path: Optional[str]
+    expression_matrix: Optional[Any]
+    sample_metadata: Optional[Dict[str, Any]]
+    classification_results: Optional[Dict[str, Any]]
+    ssgsea_scores: Optional[Dict[str, Any]]
+    system_scores: Optional[Dict[str, Any]]
+    statistical_results: Optional[Dict[str, Any]]
+    disease_type: Optional[str]
+    analysis_strategy: Optional[str]
+    visualization_plan: List[str]
+    metadata: Optional[Dict[str, Any]]
+    report_content: Optional[str]
+    figures: List[str]
+    interpretation: Optional[str]
+    report_path: Optional[str]
+    log_messages: List[str]
+    errors: List[str]
+    current_step: str
+    run_id: str
+    node_events: List[Dict[str, Any]]
+    llm_traces: List[Dict[str, Any]]
+    needs_human_review: bool
+    retry_count: int
 
 
-# ============================================================================
-# 节点函数
-# ============================================================================
-
-def extract_dataset_metadata(state: AnalysisState) -> AnalysisState:
-    """
-    节点1: 提取数据集元信息
-    
-    功能：
-    - 识别数据集类型（癌症、代谢病、神经退行性疾病等）
-    - 提取样本分组信息
-    - 确定分析目标
-    """
-    state["current_step"] = "extract_metadata"
-    state["log_messages"].append(f"[{datetime.now()}] 开始提取数据集元信息...")
-    
-    dataset_id = state["dataset_id"]
-    
-    # 从配置中获取数据集信息
-    from .config import AgentConfig
-    dataset_info = AgentConfig.get_dataset_config(dataset_id)
-    
-    # 如果配置中没有（LLM 新推荐的数据集），保留已有的 dataset_info（来自 selector）
-    if not dataset_info and state.get("dataset_info"):
-        dataset_info = state["dataset_info"]
-    
-    state["dataset_info"] = dataset_info
-    state["disease_type"] = dataset_info.get("disease_type", "unknown")
-    
-    state["log_messages"].append(f"✓ 数据集: {dataset_info.get('chinese_name', dataset_id)}")
-    state["log_messages"].append(f"✓ 疾病类型: {state['disease_type']}")
-    state["log_messages"].append(f"数据集 {dataset_id} 元信息提取完成")
-    
+def _ensure_runtime_state(state: AnalysisState) -> AnalysisState:
+    if not state.get("run_id"):
+        dataset_id = state.get("dataset_id", "unknown")
+        state["run_id"] = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{dataset_id}"
+    if state.get("node_events") is None:
+        state["node_events"] = []
+    if state.get("llm_traces") is None:
+        state["llm_traces"] = []
+    if state.get("metadata") is None:
+        state["metadata"] = {}
     return state
 
 
+def _shorten_text(value: Any, limit: int = 400) -> Any:
+    if value is None:
+        return None
+    text = str(value)
+    return text if len(text) <= limit else f"{text[:limit]}...<trimmed>"
+
+
+def _make_json_safe(value: Any) -> Any:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, dict):
+        return {str(k): _make_json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_make_json_safe(v) for v in value]
+    if hasattr(value, "shape") and hasattr(value, "columns"):
+        return {
+            "type": type(value).__name__,
+            "shape": list(value.shape),
+            "rows": len(value.index) if hasattr(value, "index") else None,
+            "columns": len(value.columns) if hasattr(value, "columns") else None,
+        }
+    return _shorten_text(value, limit=300)
+
+
+def _capture_llm_trace(
+    state: AnalysisState,
+    node_name: str,
+    trace: Optional[Dict[str, Any]],
+    adopted_output: Optional[Any] = None,
+) -> None:
+    if not trace:
+        return
+    _ensure_runtime_state(state)
+    trace_entry = _make_json_safe(trace)
+    trace_entry["node"] = node_name
+    if adopted_output is not None:
+        trace_entry["adopted_output"] = _make_json_safe(adopted_output)
+    state["llm_traces"].append(trace_entry)
+
+
+def _summarize_input(node_name: str, state: AnalysisState) -> Dict[str, Any]:
+    summary = {
+        "dataset_id": state.get("dataset_id"),
+        "disease_type": state.get("disease_type"),
+        "analysis_strategy": state.get("analysis_strategy"),
+        "current_step": state.get("current_step"),
+    }
+    if node_name in {"download", "preprocess"}:
+        summary["raw_data_path"] = state.get("raw_data_path")
+    if node_name in {"classify", "ssgsea"}:
+        matrix = state.get("expression_matrix")
+        summary["expression_matrix_shape"] = list(matrix.shape) if matrix is not None else None
+    if node_name in {"decide_visualization", "generate_plots"}:
+        summary["visualization_plan"] = state.get("visualization_plan", [])
+    return _make_json_safe(summary)
+
+
+def _summarize_output(node_name: str, state: AnalysisState) -> Dict[str, Any]:
+    output: Dict[str, Any] = {"errors": state.get("errors", [])[-3:]}
+    if node_name == "extract_metadata":
+        output["dataset_info"] = {
+            "dataset_id": state.get("dataset_id"),
+            "chinese_name": (state.get("dataset_info") or {}).get("chinese_name"),
+            "disease_type": state.get("disease_type"),
+        }
+    elif node_name == "decide_strategy":
+        output["analysis_strategy"] = state.get("analysis_strategy")
+    elif node_name == "download":
+        output["raw_data_path"] = state.get("raw_data_path")
+    elif node_name == "preprocess":
+        matrix = state.get("expression_matrix")
+        output["expression_matrix_shape"] = list(matrix.shape) if matrix is not None else None
+        output["sample_count"] = (state.get("sample_metadata") or {}).get("sample_count")
+    elif node_name == "classify":
+        result = state.get("classification_results") or {}
+        output["classification_results"] = {
+            "classified": result.get("classified"),
+            "total_genes": result.get("total_genes"),
+        }
+    elif node_name == "ssgsea":
+        output["system_scores"] = state.get("system_scores")
+    elif node_name == "decide_visualization":
+        output["visualization_plan"] = state.get("visualization_plan", [])
+    elif node_name == "generate_plots":
+        output["figures"] = state.get("figures", [])
+    elif node_name == "interpret":
+        output["interpretation_preview"] = _shorten_text(state.get("interpretation", ""), 200)
+    elif node_name == "generate_report":
+        output["report_length"] = len(state.get("report_content") or "")
+    elif node_name == "export_pdf":
+        output["report_path"] = state.get("report_path")
+    return _make_json_safe(output)
+
+
+def _collect_node_metrics(node_name: str, state: AnalysisState) -> Dict[str, Any]:
+    metrics: Dict[str, Any] = {}
+    if node_name == "download":
+        download_result = (state.get("metadata") or {}).get("download_result", {})
+        metrics = {
+            "series_matrix_file": download_result.get("series_matrix_file"),
+            "platform_file_count": len(download_result.get("platform_files", [])),
+            "used_cache": download_result.get("used_cache"),
+        }
+    elif node_name == "preprocess":
+        matrix = state.get("expression_matrix")
+        metrics = {
+            "gene_count": int(matrix.shape[0]) if matrix is not None else 0,
+            "sample_count": int(matrix.shape[1]) if matrix is not None else 0,
+            "metadata_sample_count": (state.get("sample_metadata") or {}).get("sample_count", 0),
+        }
+    elif node_name == "classify":
+        result = state.get("classification_results") or {}
+        total = result.get("total_genes") or 0
+        classified = result.get("classified") or 0
+        metrics = {
+            "total_genes": total,
+            "classified_genes": classified,
+            "unclassified_genes": result.get("unclassified", 0),
+            "classification_rate": round(classified / total, 4) if total else 0,
+            "system_counts": result.get("system_counts", {}),
+        }
+    elif node_name == "ssgsea":
+        scores = state.get("ssgsea_scores") or {}
+        top_subcategories = sorted(
+            (
+                {
+                    "code": code,
+                    "mean_score": info.get("mean_score", 0),
+                    "matched_genes": info.get("matched_genes", 0),
+                }
+                for code, info in scores.items()
+            ),
+            key=lambda item: item["mean_score"],
+            reverse=True,
+        )[:5]
+        metrics = {
+            "subcategory_count": len(scores),
+            "system_scores": state.get("system_scores") or {},
+            "top_subcategories": top_subcategories,
+        }
+    elif node_name == "decide_visualization":
+        metrics = {
+            "visualization_count": len(state.get("visualization_plan", [])),
+            "visualization_plan": state.get("visualization_plan", []),
+        }
+    elif node_name == "generate_plots":
+        metrics = {
+            "figure_count": len(state.get("figures", [])),
+            "figures": state.get("figures", []),
+        }
+    elif node_name == "interpret":
+        metrics = {"interpretation_length": len(state.get("interpretation") or "")}
+    elif node_name == "generate_report":
+        metrics = {"report_length": len(state.get("report_content") or "")}
+    elif node_name == "export_pdf":
+        metrics = {"report_path": state.get("report_path")}
+    return _make_json_safe(metrics)
+
+
+def _record_node_event(
+    state: AnalysisState,
+    *,
+    node_name: str,
+    started_at: str,
+    completed_at: str,
+    duration_ms: int,
+    status: str,
+    input_summary: Dict[str, Any],
+    output_summary: Dict[str, Any],
+    metrics: Dict[str, Any],
+    new_logs: List[str],
+    new_errors: List[str],
+) -> None:
+    _ensure_runtime_state(state)
+    status_labels = {"success": "成功", "warning": "警告", "failed": "失败"}
+    state["node_events"].append(
+        {
+            "run_id": state.get("run_id"),
+            "node": node_name,
+            "started_at": started_at,
+            "completed_at": completed_at,
+            "duration_ms": duration_ms,
+            "status": status,
+            "status_zh": status_labels.get(status, status),
+            "input_summary": _make_json_safe(input_summary),
+            "output_summary": _make_json_safe(output_summary),
+            "metrics": _make_json_safe(metrics),
+            "new_logs": _make_json_safe(new_logs),
+            "new_errors": _make_json_safe(new_errors),
+        }
+    )
+
+
+def _wrap_node(node_name: str, node_func):
+    def wrapped(state: AnalysisState) -> AnalysisState:
+        _ensure_runtime_state(state)
+        started_at = datetime.now().isoformat()
+        started_perf = time.perf_counter()
+        input_summary = _summarize_input(node_name, state)
+        log_start = len(state.get("log_messages", []))
+        error_start = len(state.get("errors", []))
+
+        try:
+            result = node_func(state)
+        except Exception as exc:
+            completed_at = datetime.now().isoformat()
+            duration_ms = int((time.perf_counter() - started_perf) * 1000)
+            state.setdefault("errors", []).append(f"{node_name} unexpected error: {exc}")
+            _record_node_event(
+                state,
+                node_name=node_name,
+                started_at=started_at,
+                completed_at=completed_at,
+                duration_ms=duration_ms,
+                status="failed",
+                input_summary=input_summary,
+                output_summary={"exception": str(exc)},
+                metrics={},
+                new_logs=state.get("log_messages", [])[log_start:],
+                new_errors=state.get("errors", [])[error_start:],
+            )
+            raise
+
+        result = result or state
+        completed_at = datetime.now().isoformat()
+        duration_ms = int((time.perf_counter() - started_perf) * 1000)
+        new_logs = result.get("log_messages", [])[log_start:]
+        new_errors = result.get("errors", [])[error_start:]
+
+        status = "success"
+        if new_errors:
+            status = "failed"
+        elif any(
+            ("⚠" in line)
+            or ("跳过" in line)
+            or ("回退" in line)
+            or ("LLM 不可用" in line)
+            or ("LLM 解读失败" in line)
+            for line in new_logs
+        ):
+            status = "warning"
+
+        _record_node_event(
+            result,
+            node_name=node_name,
+            started_at=started_at,
+            completed_at=completed_at,
+            duration_ms=duration_ms,
+            status=status,
+            input_summary=input_summary,
+            output_summary=_summarize_output(node_name, result),
+            metrics=_collect_node_metrics(node_name, result),
+            new_logs=new_logs,
+            new_errors=new_errors,
+        )
+        return result
+
+    return wrapped
+
+
+def _write_structured_artifacts(state: AnalysisState, output_dir: str) -> Dict[str, str]:
+    llm_trace_dir = os.path.join(output_dir, "llm_traces")
+    os.makedirs(llm_trace_dir, exist_ok=True)
+
+    node_events_path = os.path.join(output_dir, "node_events.jsonl")
+    with open(node_events_path, "w", encoding="utf-8") as f:
+        for event in state.get("node_events", []):
+            f.write(json.dumps(_make_json_safe(event), ensure_ascii=False) + "\n")
+
+    llm_index = []
+    for idx, trace in enumerate(state.get("llm_traces", []), 1):
+        trace_file = os.path.join(llm_trace_dir, f"{idx:02d}_{trace.get('node', 'llm')}.json")
+        with open(trace_file, "w", encoding="utf-8") as f:
+            json.dump(_make_json_safe(trace), f, ensure_ascii=False, indent=2)
+        llm_index.append(
+            {
+                "node": trace.get("node"),
+                "operation": trace.get("operation"),
+                "status": trace.get("status"),
+                "path": trace_file,
+            }
+        )
+
+    run_log = {
+        "run_id": state.get("run_id"),
+        "dataset_id": state.get("dataset_id"),
+        "dataset_name": (state.get("dataset_info") or {}).get("chinese_name"),
+        "disease_type": state.get("disease_type"),
+        "analysis_strategy": state.get("analysis_strategy"),
+        "status": "failed" if state.get("errors") else "success",
+        "status_zh": "失败" if state.get("errors") else "成功",
+        "analysis_time": datetime.now().isoformat(),
+        "node_count": len(state.get("node_events", [])),
+        "llm_trace_count": len(state.get("llm_traces", [])),
+        "figure_count": len(state.get("figures", [])),
+        "errors": state.get("errors", []),
+        "node_events": state.get("node_events", []),
+        "llm_trace_index": llm_index,
+    }
+
+    run_log_path = os.path.join(output_dir, "run_log.json")
+    with open(run_log_path, "w", encoding="utf-8") as f:
+        json.dump(_make_json_safe(run_log), f, ensure_ascii=False, indent=2)
+
+    return {
+        "run_log_path": run_log_path,
+        "node_events_path": node_events_path,
+        "llm_trace_dir": llm_trace_dir,
+    }
+
+
+def _safe_console_text(text: Any) -> str:
+    rendered = str(text)
+    try:
+        return rendered.encode("gbk", errors="replace").decode("gbk", errors="replace")
+    except Exception:
+        return rendered
+
+
+def extract_dataset_metadata(state: AnalysisState) -> AnalysisState:
+    return data_extract_dataset_metadata(state)
+
+
 def decide_analysis_strategy(state: AnalysisState) -> AnalysisState:
-    """
-    决策节点1: 确定分析策略
-    
-    根据疾病类型和数据特征，决定：
-    - 病例对照分析
-    - 亚型比较分析
-    - 时序分析
-    - 相关性分析
-    """
     state["current_step"] = "decide_strategy"
     state["log_messages"].append(f"[{datetime.now()}] 决策分析策略...")
-    
-    # 尝试使用 LLM 决策
+
     try:
         from .llm_client import create_llm_integration
-        from .config import AgentConfig
-        
+
         llm = create_llm_integration()
-        
-        # 准备数据集信息
-        dataset_info = {
-            'dataset_id': state['dataset_id'],
-            **state.get('dataset_info', {})
-        }
-        
-        # LLM 决策
+        dataset_info = {"dataset_id": state["dataset_id"], **state.get("dataset_info", {})}
         decision = llm.decide_analysis_strategy(dataset_info)
-        
-        state['analysis_strategy'] = decision['strategy']
-        state['log_messages'].append(
+        _capture_llm_trace(state, "decide_strategy", llm.get_last_trace(), decision)
+
+        state["analysis_strategy"] = decision["strategy"]
+        state["log_messages"].append(
             f"LLM 决策: {decision['strategy']} (置信度: {decision.get('confidence', 0):.2f})"
         )
-        state['log_messages'].append(f"理由: {decision.get('reasoning', '')}")
-        
-        # 保存决策详情到元数据
-        if 'metadata' not in state:
-            state['metadata'] = {}
-        state['metadata']['strategy_decision'] = decision
-        
-    except Exception as e:
-        # 回退到规则引擎
-        state['log_messages'].append(f"LLM 不可用，使用规则引擎: {e}")
-        
-        from .config import AgentConfig
-        disease_type = state.get('disease_type', 'unknown')
-        dataset_info = state.get('dataset_info', {})
-        
+        state["log_messages"].append(f"理由: {decision.get('reasoning', '')}")
+        state.setdefault("metadata", {})
+        state["metadata"]["strategy_decision"] = decision
+    except Exception as exc:
+        state["log_messages"].append(f"LLM 不可用，使用规则引擎: {exc}")
+        _capture_llm_trace(
+            state,
+            "decide_strategy",
+            {
+                "operation": "decide_analysis_strategy",
+                "status": "fallback",
+                "fallback_used": True,
+                "error": str(exc),
+                "response_text": None,
+            },
+        )
         strategy_map = {
-            'neurodegenerative': 'case_control',
-            'cancer': 'subtype_comparison',
-            'metabolic': 'case_control',
-            'repair': 'time_series',
-            'infection': 'case_control'
+            "neurodegenerative": "case_control",
+            "cancer": "subtype_comparison",
+            "metabolic": "case_control",
+            "repair": "time_series",
+            "infection": "case_control",
         }
-        
-        strategy = strategy_map.get(disease_type, 'case_control')
-        state['analysis_strategy'] = strategy
-        state['log_messages'].append(f"规则引擎决策: {strategy}")
-    
+        strategy = strategy_map.get(state.get("disease_type", "unknown"), "case_control")
+        state["analysis_strategy"] = strategy
+        state["log_messages"].append(f"规则引擎决策: {strategy}")
+
     return state
 
 
 def download_dataset(state: AnalysisState) -> AnalysisState:
-    """
-    节点2: 下载数据集
-    
-    功能：
-    - 检查数据集是否已存在
-    - 如果不存在，自动从 GEO 下载
-    - 下载 series matrix 和 platform 文件
-    """
-    state["current_step"] = "download"
-    state["log_messages"].append(f"[{datetime.now()}] 准备数据集...")
-    
-    dataset_id = state["dataset_id"]
-    data_path = f"data/validation_datasets/{dataset_id}"
-    
-    import os
-    
-    # 检查数据是否已存在
-    if os.path.exists(data_path):
-        # 检查必要文件是否完整
-        series_file = os.path.join(data_path, f"{dataset_id}_series_matrix.txt.gz")
-        platform_files = [f for f in os.listdir(data_path) if f.startswith('GPL')]
-        
-        if os.path.exists(series_file) and len(platform_files) > 0:
-            # 验证不是 SuperSeries
-            validation = _validate_series_matrix(series_file)
-            if not validation['has_data']:
-                state["errors"].append(f"❌ {dataset_id} 是 SuperSeries 或无表达数据: {validation['reason']}")
-                state["log_messages"].append(f"❌ 数据集无效: {validation['reason']}")
-                return state
-            state["raw_data_path"] = data_path
-            state["log_messages"].append(f"✓ 数据已存在: {data_path}")
-            state["log_messages"].append(f"  - Series matrix: {os.path.basename(series_file)}")
-            state["log_messages"].append(f"  - Platform 文件: {len(platform_files)} 个")
-            state["log_messages"].append("数据准备完成")
-            return state
-        else:
-            state["log_messages"].append(f"⚠️  数据不完整，重新下载...")
-    
-    # 数据不存在或不完整，开始下载
-    state["log_messages"].append(f"开始从 GEO 下载 {dataset_id}...")
-    
-    try:
-        # 导入下载器
-        from src.data_extraction.geo_downloader import download_geo_dataset
-        
-        # 下载数据集
-        result = download_geo_dataset(dataset_id)
-        
-        if result['success']:
-            # 验证下载的 series matrix 是否有实际数据（非 SuperSeries）
-            series_file_path = result['series_matrix_file']
-            validation = _validate_series_matrix(series_file_path)
-            if not validation['has_data']:
-                state["errors"].append(f"❌ {dataset_id} 是 SuperSeries 或无表达数据: {validation['reason']}")
-                state["log_messages"].append(f"❌ 数据集无效: {validation['reason']}")
-                state["log_messages"].append("⚠️  请重新选择数据集")
-                return state
-
-            state["raw_data_path"] = data_path
-            state["log_messages"].append(f"✅ 数据下载成功")
-            state["log_messages"].append(f"  - Series matrix: {os.path.basename(result['series_matrix_file'])}")
-            state["log_messages"].append(f"  - Platform 文件: {len(result['platform_files'])} 个")
-            
-            # 保存下载信息到状态
-            if 'metadata' not in state:
-                state['metadata'] = {}
-            state['metadata']['download_result'] = result
-            
-        else:
-            # 下载失败：GPL 文件缺失，无法继续分析，直接终止
-            error_msg = f"❌ {dataset_id} 下载失败，缺少 GPL 平台文件，终止分析"
-            self_errors = result.get('errors', [])
-            state["log_messages"].append(error_msg)
-            for e in self_errors:
-                state["log_messages"].append(f"  {e}")
-            state["log_messages"].append("💡 请将对应 GPL 文件放入 data/gpl_platforms/ 后重试")
-            state["errors"].append(error_msg)
-            # 不设置 raw_data_path，后续节点会因此跳过
-            return state
-    
-    except Exception as e:
-        # 下载器异常，直接终止
-        error_msg = f"❌ 下载器异常: {e}"
-        state["log_messages"].append(error_msg)
-        state["log_messages"].append("💡 请将对应 GPL 文件放入 data/gpl_platforms/ 后重试")
-        state["errors"].append(error_msg)
-        return state
-    
-    state["log_messages"].append("数据准备完成")
-    
-    return state
+    return data_download_dataset(state, parsing_validate_series_matrix)
 
 
 def preprocess_data(state: AnalysisState) -> AnalysisState:
-    """节点3: 数据预处理 — 解析 series matrix + GPL 平台文件，生成 gene 表达矩阵"""
-    state["current_step"] = "preprocess"
-    state["log_messages"].append(f"[{datetime.now()}] 数据预处理...")
-
-    dataset_id = state["dataset_id"]
-    data_dir = Path("data/validation_datasets")
-
-    # 找到数据集目录（支持 GSExxxx 或 GSExxxx-疾病名 两种格式）
-    dataset_dir = None
-    for d in data_dir.iterdir():
-        if d.is_dir() and d.name.startswith(dataset_id):
-            dataset_dir = d
-            break
-    if dataset_dir is None:
-        dataset_dir = data_dir / dataset_id
-
-    series_file = dataset_dir / f"{dataset_id}_series_matrix.txt.gz"
-    if not series_file.exists():
-        state["errors"].append(f"Series matrix 文件不存在: {series_file}")
-        state["log_messages"].append("❌ 找不到 series matrix 文件")
-        return state
-
-    gpl_file = _find_gpl_file(series_file, dataset_dir)
-    if gpl_file is None:
-        state["errors"].append("找不到 GPL 平台注释文件")
-        state["log_messages"].append("❌ 找不到 GPL 平台文件")
-        return state
-
-    state["log_messages"].append(f"✓ Series matrix: {series_file.name}")
-    state["log_messages"].append(f"✓ GPL 文件: {gpl_file.name}")
-
-    try:
-        # 解析 series matrix → probe 表达矩阵
-        expr_df = _parse_series_matrix(series_file)
-        state["log_messages"].append(f"✓ Probe 矩阵: {expr_df.shape[0]} probes × {expr_df.shape[1]} 样本")
-
-        # 解析 GPL → probe→gene 映射
-        mapping_df = _parse_gpl_annotation(gpl_file)
-        state["log_messages"].append(f"✓ 映射: {mapping_df['probe_id'].nunique()} probes → {mapping_df['gene_symbol'].nunique()} genes")
-
-        # probe → gene 表达矩阵（多 probe 取均值）
-        gene_expr_df = _map_probe_to_gene(expr_df, mapping_df)
-        state["log_messages"].append(f"✓ Gene 矩阵: {gene_expr_df.shape[0]} genes × {gene_expr_df.shape[1]} 样本")
-
-        state["expression_matrix"] = gene_expr_df
-        state["sample_metadata"] = _extract_sample_info(series_file)
-        state["processed_data_path"] = str(dataset_dir)
-        state["log_messages"].append("预处理完成")
-
-    except Exception as e:
-        import traceback
-        state["errors"].append(f"预处理失败: {e}")
-        state["log_messages"].append(f"❌ 预处理失败: {e}\n{traceback.format_exc()}")
-
-    return state
-
+    return data_preprocess_data(
+        state,
+        parsing_find_gpl_file,
+        parsing_parse_series_matrix,
+        parsing_parse_gpl_annotation,
+        parsing_map_probe_to_gene,
+        parsing_extract_sample_info,
+    )
 
 
 def _validate_series_matrix(series_file) -> dict:
-    """
-    验证 series matrix 文件是否包含实际表达数据。
-    拒绝：SuperSeries、小鼠数据、ChIP-seq/ATAC-seq等非表达谱数据。
-    """
-    import gzip
-    result = {'has_data': False, 'reason': '', 'organism': None, 'sample_count': 0}
-    
-    # 非表达谱的数据类型关键词
-    NON_EXPRESSION_TYPES = [
-        'chip-seq', 'atac-seq', 'chip seq', 'genome binding',
-        'occupancy profiling', 'hi-c', 'cut&run', 'cut&tag',
-        'bisulfite', 'methylation', 'snp array', 'cnv',
-    ]
-    
-    try:
-        path = Path(series_file)
-        opener = gzip.open(path, 'rt', encoding='utf-8', errors='ignore') if path.suffix == '.gz' else open(path, 'r', encoding='utf-8', errors='ignore')
-        has_table = False
-        organism = None
-        is_super = False
-        sample_count = 0
-        series_types = []
-        with opener as f:
-            for line in f:
-                if '!series_matrix_table_begin' in line.lower():
-                    has_table = True
-                if '!Series_platform_taxid' in line or '!Series_sample_taxid' in line:
-                    if '10090' in line:
-                        organism = 'mouse'
-                    elif '9606' in line:
-                        organism = 'human'
-                if 'SuperSeries' in line or 'This SuperSeries' in line:
-                    is_super = True
-                if '!Series_sample_id' in line:
-                    sample_count = len(line.split()) - 1
-                if '!Series_type' in line:
-                    series_types.append(line.lower())
-
-        result['organism'] = organism
-        result['sample_count'] = sample_count
-
-        if is_super and not has_table:
-            result['reason'] = 'SuperSeries（无表达矩阵，只有子系列引用）'
-            return result
-        if not has_table:
-            result['reason'] = '无 series_matrix_table_begin，不含表达矩阵'
-            return result
-
-        # 检查数据类型
-        all_types = ' '.join(series_types)
-        for bad_type in NON_EXPRESSION_TYPES:
-            if bad_type in all_types:
-                result['reason'] = f'非表达谱数据类型: {bad_type}（需要 Expression profiling by array/sequencing）'
-                return result
-
-        if organism == 'mouse':
-            result['reason'] = '小鼠数据（taxid=10090），不适用于人类疾病分析'
-            return result
-
-        if sample_count < 6:
-            result['reason'] = f'样本数过少（{sample_count} 个），无法进行有效的组间比较'
-            return result
-
-        result['has_data'] = True
-        result['reason'] = 'OK'
-    except Exception as e:
-        result['reason'] = f'验证失败: {e}'
-    return result
+    return parsing_validate_series_matrix(series_file)
 
 
-def _find_gpl_file(series_file: Path, dataset_dir: Path) -> Optional[Path]:
-    """查找 GPL 平台文件：先从 series matrix 提取平台 ID，再按优先级查找"""
-    import gzip, re
-
-    platform_id = None
-    try:
-        with gzip.open(series_file, 'rt', encoding='utf-8', errors='ignore') as f:
-            for line in f:
-                if line.startswith('!Series_platform_id'):
-                    m = re.search(r'GPL\d+', line)
-                    if m:
-                        platform_id = m.group()
-                    break
-    except Exception:
-        pass
-
-    search_dirs = [Path("data/gpl_platforms"), dataset_dir]
-    extensions = ['.txt', '.annot.gz', '.soft.gz']
-    for d in search_dirs:
-        if not d.exists():
-            continue
-        if platform_id:
-            for f in d.iterdir():
-                if f.name.startswith(platform_id) and f.suffix in ('.txt', '.gz'):
-                    return f
-        # fallback: any GPL file in the dir
-        for f in d.iterdir():
-            if f.name.startswith('GPL') and f.suffix in ('.txt', '.gz'):
-                return f
-
-    return None
+def _find_gpl_file(series_file, dataset_dir):
+    return parsing_find_gpl_file(series_file, dataset_dir)
 
 
-def _parse_series_matrix(series_file: Path):
-    """解析 series matrix .txt.gz → probe × sample DataFrame"""
-    import gzip
-    import pandas as pd
-
-    with gzip.open(series_file, 'rt', encoding='utf-8', errors='ignore') as f:
-        lines = f.readlines()
-
-    # 找数据表起始行
-    data_start = None
-    for i, line in enumerate(lines):
-        if line.startswith('!series_matrix_table_begin'):
-            data_start = i + 1
-            break
-
-    if data_start is None:
-        raise ValueError("找不到 series_matrix_table_begin")
-
-    data_lines = []
-    for line in lines[data_start:]:
-        if line.startswith('!series_matrix_table_end'):
-            break
-        data_lines.append(line.strip().split('\t'))
-
-    header = [c.strip('"') for c in data_lines[0]]
-    rows = [[c.strip('"') for c in row] for row in data_lines[1:] if row]
-
-    df = pd.DataFrame(rows, columns=header)
-    df = df.set_index(df.columns[0])
-    df.index.name = 'probe_id'
-    for col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-    df = df.dropna(how='all')
-    return df
+def _parse_series_matrix(series_file):
+    return parsing_parse_series_matrix(series_file)
 
 
-def _parse_gpl_annotation(gpl_file: Path):
-    """解析 GPL 平台文件 → DataFrame(probe_id, gene_symbol)
-    支持 .txt, .annot.gz, .soft.gz 格式
-    """
-    import pandas as pd
-    import gzip
+def _parse_gpl_annotation(gpl_file):
+    return parsing_parse_gpl_annotation(gpl_file)
 
-    # 读取文件内容（支持 gzip）
-    name = gpl_file.name.lower()
-    if name.endswith('.gz'):
-        opener = lambda: gzip.open(gpl_file, 'rt', encoding='utf-8', errors='ignore')
-    else:
-        opener = lambda: open(gpl_file, 'r', encoding='utf-8', errors='ignore')
 
-    with opener() as f:
-        lines = f.readlines()
-
-    # 找数据起始行（跳过 # ! 注释）
-    data_start = 0
-    for i, line in enumerate(lines):
-        if line.startswith('!platform_table_begin'):
-            data_start = i + 1
-            break
-        if not line.startswith('#') and not line.startswith('!') and line.strip():
-            data_start = i
-            break
-
-    # 找数据结束行
-    data_end = len(lines)
-    for i in range(data_start, len(lines)):
-        if lines[i].startswith('!platform_table_end'):
-            data_end = i
-            break
-
-    from io import StringIO
-    content = ''.join(lines[data_start:data_end])
-    df = pd.read_csv(StringIO(content), sep='\t', low_memory=False, on_bad_lines='skip')
-
-    # 找 probe ID 列
-    probe_col = next((c for c in df.columns if c.upper() in ('ID', 'PROBE_ID', 'PROBEID')), df.columns[0])
-
-    # 找 gene symbol 列
-    gene_col_candidates = ['Gene Symbol', 'GENE_SYMBOL', 'Gene_Symbol', 'Symbol',
-                           'SYMBOL', 'gene_symbol', 'Gene', 'GENE', 'gene_assignment',
-                           'Gene Assignment', 'GENE_ASSIGNMENT']
-    gene_col = next((c for c in gene_col_candidates if c in df.columns), None)
-    if gene_col is None:
-        # 找包含 gene 的列
-        gene_col = next((c for c in df.columns if 'gene' in c.lower()), None)
-    if gene_col is None:
-        raise ValueError(f"找不到 gene symbol 列，可用列: {list(df.columns)}")
-
-    mapping = df[[probe_col, gene_col]].copy()
-    mapping.columns = ['probe_id', 'gene_symbol']
-    mapping = mapping.dropna(subset=['gene_symbol'])
-    mapping = mapping[~mapping['gene_symbol'].astype(str).str.strip().isin(['', '---', 'null', 'NULL', 'nan'])]
-    # 多基因取第一个（支持 /// 和 // 分隔符，以及 gene_assignment 格式）
-    mapping['gene_symbol'] = (mapping['gene_symbol'].astype(str)
-                              .str.split('///').str[0]
-                              .str.split('//').str[0]
-                              .str.strip())
-    mapping['probe_id'] = mapping['probe_id'].astype(str)
-    return mapping.reset_index(drop=True)
+def _extract_gene_symbol_from_annotation(annotation: str) -> str:
+    return parsing_extract_gene_symbol_from_annotation(annotation)
 
 
 def _map_probe_to_gene(expr_df, mapping_df):
-    """probe × sample → gene × sample（多 probe 取均值）"""
-    import pandas as pd
-
-    merged = expr_df.reset_index().merge(mapping_df, on='probe_id', how='inner')
-    merged = merged.drop('probe_id', axis=1)
-    gene_expr = merged.groupby('gene_symbol').mean()
-    return gene_expr
+    return parsing_map_probe_to_gene(expr_df, mapping_df)
 
 
 def _build_subcategory_gene_sets() -> Dict[str, List[str]]:
-    """
-    从分类结果 + GO/KEGG 映射构建 14 个子类的基因集
-    复用 complete_real_ssgsea_validation.py 的逻辑
-    """
-    import json
-    import pandas as pd
-
-    classification_file = "results/full_classification/full_classification_results.csv"
-    go_mapping_file = "data/go_annotations/go_to_genes.json"
-    kegg_mapping_file = "data/kegg_mappings/kegg_to_genes.json"
-
-    df = pd.read_csv(classification_file)
-
-    with open(go_mapping_file, 'r') as f:
-        go_to_genes = json.load(f)
-
-    with open(kegg_mapping_file, 'r') as f:
-        kegg_raw = json.load(f)
-    kegg_to_genes = {pid: info['genes'] for pid, info in kegg_raw.items()}
-
-    subcategory_codes = ['A1','A2','A3','A4','B1','B2','B3','C1','C2','C3','D1','D2','E1','E2']
-    gene_sets = {}
-
-    for code in subcategory_codes:
-        subset = df[df['Subcategory_Code'] == code]
-        all_genes = set()
-
-        for term_id in subset['ID']:
-            if str(term_id).startswith('GO:') and term_id in go_to_genes:
-                all_genes.update(go_to_genes[term_id])
-            elif str(term_id).startswith('KEGG:') and term_id in kegg_to_genes:
-                all_genes.update(kegg_to_genes[term_id])
-
-        gene_sets[code] = list(all_genes)
-
-    return gene_sets
+    return shared_build_subcategory_gene_sets()
 
 
-def _extract_sample_info(series_file: Path) -> Dict:
-    """从 series matrix 提取样本元数据"""
-    import gzip
-    info = {'accessions': [], 'titles': [], 'characteristics': []}
-    try:
-        with gzip.open(series_file, 'rt', encoding='utf-8', errors='ignore') as f:
-            for line in f:
-                if line.startswith('!Sample_geo_accession'):
-                    info['accessions'] = [x.strip('"') for x in line.strip().split('\t')[1:]]
-                elif line.startswith('!Sample_title'):
-                    info['titles'] = [x.strip('"') for x in line.strip().split('\t')[1:]]
-                elif line.startswith('!Sample_characteristics_ch1'):
-                    chars = [x.strip('"') for x in line.strip().split('\t')[1:]]
-                    info['characteristics'].append(chars)
-                elif line.startswith('!series_matrix_table_begin'):
-                    break
-        info['sample_count'] = len(info['accessions'])
-    except Exception:
-        pass
-    return info
+def _extract_sample_info(series_file) -> Dict[str, Any]:
+    return parsing_extract_sample_info(series_file)
 
 
 def classify_genes(state: AnalysisState) -> AnalysisState:
-    """节点4: 五大系统分类 — 统计表达矩阵中各基因在 14 个子类基因集的覆盖情况"""
-    state["current_step"] = "classify"
-    state["log_messages"].append(f"[{datetime.now()}] 执行五大系统分类...")
-
-    gene_expr_df = state.get("expression_matrix")
-    if gene_expr_df is None:
-        state["errors"].append("无表达矩阵，跳过分类")
-        return state
-
-    try:
-        gene_sets = _build_subcategory_gene_sets()
-        expressed_genes = set(gene_expr_df.index)
-
-        subcat_to_system = {
-            'A1':'System A','A2':'System A','A3':'System A','A4':'System A',
-            'B1':'System B','B2':'System B','B3':'System B',
-            'C1':'System C','C2':'System C','C3':'System C',
-            'D1':'System D','D2':'System D',
-            'E1':'System E','E2':'System E',
-        }
-
-        system_counts = {f'System {s}': 0 for s in 'ABCDE'}
-        subcategory_counts = {}
-        classified_genes = set()
-
-        for code, genes in gene_sets.items():
-            matched = expressed_genes & set(genes)
-            subcategory_counts[code] = len(matched)
-            classified_genes.update(matched)
-            system = subcat_to_system.get(code)
-            if system:
-                system_counts[system] += len(matched)
-
-        state["classification_results"] = {
-            "total_genes": len(expressed_genes),
-            "classified": len(classified_genes),
-            "unclassified": len(expressed_genes) - len(classified_genes),
-            "system_counts": system_counts,
-            "subcategory_counts": subcategory_counts,
-        }
-
-        state["log_messages"].append(
-            f"✓ 分类完成: {len(classified_genes)}/{len(expressed_genes)} 基因匹配到基因集"
-        )
-        for sys_name, cnt in system_counts.items():
-            state["log_messages"].append(f"  {sys_name}: {cnt} 基因")
-
-    except Exception as e:
-        state["errors"].append(f"分类失败: {e}")
-        state["log_messages"].append(f"❌ 分类失败: {e}")
-
-    return state
+    return scoring_classify_genes(state)
 
 
 def perform_ssgsea(state: AnalysisState) -> AnalysisState:
-    """节点5: ssGSEA 评估 — 自实现算法，计算全部 14 个子类得分"""
-    state["current_step"] = "ssgsea"
-    state["log_messages"].append(f"[{datetime.now()}] 执行 ssGSEA 分析...")
-
-    gene_expr_df = state.get("expression_matrix")
-    if gene_expr_df is None:
-        state["errors"].append("无表达矩阵，跳过 ssGSEA")
-        return state
-
-    try:
-        import numpy as np
-
-        gene_sets = _build_subcategory_gene_sets()
-        gene_sets = {k: v for k, v in gene_sets.items() if len(v) >= 5}
-
-        subcategory_names = {
-            'A1': 'Genomic Stability and Repair',
-            'A2': 'Somatic Maintenance and Identity Preservation',
-            'A3': 'Cellular Homeostasis and Structural Maintenance',
-            'A4': 'Inflammation Resolution and Damage Containment',
-            'B1': 'Innate Immunity', 'B2': 'Adaptive Immunity',
-            'B3': 'Immune Regulation and Tolerance',
-            'C1': 'Energy Metabolism and Catabolism',
-            'C2': 'Biosynthesis and Anabolism',
-            'C3': 'Detoxification and Metabolic Stress Handling',
-            'D1': 'Neural Regulation and Signal Transmission',
-            'D2': 'Endocrine and Autonomic Regulation',
-            'E1': 'Reproduction',
-            'E2': 'Development and Reproductive Maturation',
-        }
-        subcat_to_system = {
-            'A1': 'System A', 'A2': 'System A', 'A3': 'System A', 'A4': 'System A',
-            'B1': 'System B', 'B2': 'System B', 'B3': 'System B',
-            'C1': 'System C', 'C2': 'System C', 'C3': 'System C',
-            'D1': 'System D', 'D2': 'System D',
-            'E1': 'System E', 'E2': 'System E',
-        }
-
-        available_genes = set(gene_expr_df.index)
-        ssgsea_scores = {}
-        system_score_lists: Dict[str, list] = {f'System {s}': [] for s in 'ABCDE'}
-
-        for code, gene_list in gene_sets.items():
-            matched = list(set(gene_list) & available_genes)
-            scores = _compute_ssgsea_scores(gene_expr_df, matched)
-            mean_score = float(np.mean(scores))
-
-            ssgsea_scores[code] = {
-                'mean_score': mean_score,
-                'std_score': float(np.std(scores)),
-                'median_score': float(np.median(scores)),
-                'name': subcategory_names.get(code, code),
-                'gene_count': len(gene_list),
-                'matched_genes': len(matched),
-            }
-            system = subcat_to_system.get(code)
-            if system:
-                system_score_lists[system].append(mean_score)
-
-        system_scores = {
-            sys: float(np.mean(vals)) if vals else 0.0
-            for sys, vals in system_score_lists.items()
-        }
-
-        state["ssgsea_scores"] = ssgsea_scores
-        state["system_scores"] = system_scores
-
-        state["log_messages"].append(f"✓ ssGSEA 完成: {len(ssgsea_scores)} 个子类")
-        for sys_name, score in sorted(system_scores.items()):
-            state["log_messages"].append(f"  {sys_name}: {score:.4f}")
-
-    except Exception as e:
-        import traceback
-        state["errors"].append(f"ssGSEA 失败: {e}")
-        state["log_messages"].append(f"❌ ssGSEA 失败: {e}\n{traceback.format_exc()}")
-
-    return state
+    return scoring_perform_ssgsea(state)
 
 
-def _compute_ssgsea_scores(gene_expr_df, gene_set_genes: list, alpha: float = 0.25) -> 'np.ndarray':
-    """自实现 ssGSEA：加权 KS 统计量，对每个样本计算基因集富集得分"""
-    import numpy as np
-
-    if not gene_set_genes:
-        return np.zeros(gene_expr_df.shape[1])
-
-    matched = list(set(gene_set_genes) & set(gene_expr_df.index))
-    if not matched:
-        return np.zeros(gene_expr_df.shape[1])
-
-    scores = []
-    for sample in gene_expr_df.columns:
-        expr = gene_expr_df[sample].dropna()
-        if len(expr) == 0:
-            scores.append(0.0)
-            continue
-
-        sorted_expr = expr.sort_values(ascending=False)
-        N = len(sorted_expr)
-        in_set = sorted_expr.index.isin(matched)
-        Nh = in_set.sum()
-        if Nh == 0:
-            scores.append(0.0)
-            continue
-
-        weights = np.where(in_set, np.abs(sorted_expr.values) ** alpha, 0.0)
-        weight_sum = weights[in_set].sum()
-        if weight_sum == 0:
-            scores.append(0.0)
-            continue
-
-        miss_penalty = 1.0 / (N - Nh) if N > Nh else 0.0
-        running, max_es, min_es = 0.0, 0.0, 0.0
-        for i in range(N):
-            running += weights[i] / weight_sum if in_set[i] else -miss_penalty
-            if running > max_es:
-                max_es = running
-            if running < min_es:
-                min_es = running
-
-        scores.append(max_es if abs(max_es) >= abs(min_es) else min_es)
-
-    return np.array(scores)
-
+def _compute_ssgsea_scores(gene_expr_df, gene_set_genes: list, alpha: float = 0.25):
+    return shared_compute_ssgsea_scores(gene_expr_df, gene_set_genes, alpha=alpha)
 
 
 def decide_visualization(state: AnalysisState) -> AnalysisState:
-    """决策节点2: 确定可视化策略"""
     state["current_step"] = "decide_visualization"
-
-    # LLM 返回的类型名 → plot_generator 支持的类型
-    VIZ_MAP = {
-        'heatmap': 'heatmap',
-        'boxplot': 'boxplot',
-        'correlation_heatmap': 'correlation',
-        'correlation': 'correlation',
-        'time_series': 'heatmap',   # 降级到热图
-        'clustering': 'heatmap',
-        'network': 'correlation',
-        'volcano': 'barplot',
-        'trajectory': 'barplot',
-        'immune_profile': 'barplot',
-        'pathway': 'barplot',
+    viz_map = {
+        "heatmap": "heatmap",
+        "boxplot": "boxplot",
+        "correlation_heatmap": "correlation",
+        "correlation": "correlation",
+        "time_series": "heatmap",
+        "clustering": "heatmap",
+        "network": "correlation",
+        "volcano": "barplot",
+        "trajectory": "barplot",
+        "immune_profile": "barplot",
+        "pathway": "barplot",
     }
-    ALWAYS_INCLUDE = ['radar', 'barplot']  # 这两个始终生成
+    always_include = ["radar", "barplot"]
 
     try:
         from .llm_client import create_llm_integration
+
         llm = create_llm_integration()
-
         data_characteristics = {
-            'sample_count': state.get('sample_metadata', {}).get('sample_count', 0),
-            'has_time_series': 'time' in str(state.get('sample_metadata', {})).lower(),
-            'analysis_strategy': state.get('analysis_strategy', 'case_control'),
+            "sample_count": state.get("sample_metadata", {}).get("sample_count", 0),
+            "has_time_series": "time" in str(state.get("sample_metadata", {})).lower(),
+            "analysis_strategy": state.get("analysis_strategy", "case_control"),
         }
-
         decision = llm.decide_visualization_strategy(
-            state.get('analysis_strategy', 'case_control'),
-            data_characteristics
+            state.get("analysis_strategy", "case_control"),
+            data_characteristics,
         )
-
-        llm_types = decision.get('primary_visualizations', [])
-        mapped = [VIZ_MAP[t] for t in llm_types if t in VIZ_MAP]
-        plan = list(dict.fromkeys(ALWAYS_INCLUDE + mapped))  # 去重保序
-
-        state['visualization_plan'] = plan
-        state['log_messages'].append(f"可视化计划 (LLM): {', '.join(plan)}")
-
-    except Exception as e:
-        state['log_messages'].append(f"可视化决策回退: {e}")
-        strategy = state.get('analysis_strategy', 'case_control')
+        _capture_llm_trace(state, "decide_visualization", llm.get_last_trace(), decision)
+        mapped = [viz_map[t] for t in decision.get("primary_visualizations", []) if t in viz_map]
+        state["visualization_plan"] = list(dict.fromkeys(always_include + mapped))
+        state["log_messages"].append(
+            f"可视化计划 (LLM): {', '.join(state['visualization_plan'])}"
+        )
+    except Exception as exc:
+        state["log_messages"].append(f"可视化决策回退: {exc}")
+        _capture_llm_trace(
+            state,
+            "decide_visualization",
+            {
+                "operation": "decide_visualization_strategy",
+                "status": "fallback",
+                "fallback_used": True,
+                "error": str(exc),
+                "response_text": None,
+            },
+        )
         extra = {
-            'case_control': ['heatmap', 'boxplot', 'correlation'],
-            'subtype_comparison': ['heatmap', 'correlation'],
-            'time_series': ['heatmap', 'boxplot'],
-            'correlation_analysis': ['correlation', 'heatmap'],
-        }.get(strategy, ['heatmap', 'boxplot'])
-        plan = list(dict.fromkeys(ALWAYS_INCLUDE + extra))
-        state['visualization_plan'] = plan
-        state['log_messages'].append(f"可视化计划 (默认): {', '.join(plan)}")
-
+            "case_control": ["heatmap", "boxplot", "correlation"],
+            "subtype_comparison": ["heatmap", "correlation"],
+            "time_series": ["heatmap", "boxplot"],
+            "correlation_analysis": ["correlation", "heatmap"],
+        }.get(state.get("analysis_strategy", "case_control"), ["heatmap", "boxplot"])
+        state["visualization_plan"] = list(dict.fromkeys(always_include + extra))
+        state["log_messages"].append(
+            f"可视化计划 (默认): {', '.join(state['visualization_plan'])}"
+        )
     return state
 
 
 def generate_plots(state: AnalysisState) -> AnalysisState:
-    """节点6: 生成图表"""
     state["current_step"] = "generate_plots"
     state["log_messages"].append(f"[{datetime.now()}] 生成可视化图表...")
 
     ssgsea_scores = state.get("ssgsea_scores")
     system_scores = state.get("system_scores")
     gene_expr_df = state.get("expression_matrix")
-
     if not ssgsea_scores or not system_scores:
-        state["log_messages"].append("⚠ 无 ssGSEA 得分，跳过绘图")
+        state["log_messages"].append("无 ssGSEA 得分，跳过绘图")
         return state
 
-    import os
     output_dir = f"results/agent_analysis/{state['dataset_id']}/figures"
     os.makedirs(output_dir, exist_ok=True)
-
-    viz_plan = state.get("visualization_plan") or ['radar', 'barplot', 'heatmap', 'boxplot', 'correlation']
-
-    # heatmap/boxplot/correlation 需要表达矩阵，没有就降级
+    viz_plan = state.get("visualization_plan") or [
+        "radar",
+        "barplot",
+        "heatmap",
+        "boxplot",
+        "correlation",
+    ]
     if gene_expr_df is None:
-        viz_plan = [v for v in viz_plan if v not in ('heatmap', 'boxplot', 'correlation')]
-        state["log_messages"].append("⚠ 无表达矩阵，跳过需要样本数据的图表")
+        viz_plan = [v for v in viz_plan if v not in ("heatmap", "boxplot", "correlation")]
+        state["log_messages"].append("无表达矩阵，跳过依赖样本数据的图表")
 
     try:
         from .plot_generator import generate_all_plots
+
         figures = generate_all_plots(
             dataset_id=state["dataset_id"],
             ssgsea_scores=ssgsea_scores,
@@ -875,306 +609,83 @@ def generate_plots(state: AnalysisState) -> AnalysisState:
             viz_plan=viz_plan,
         )
         state["figures"] = figures
-        state["log_messages"].append(f"✓ 共生成 {len(figures)} 个图表")
-    except Exception as e:
+        state["log_messages"].append(f"共生成 {len(figures)} 个图表")
+    except Exception as exc:
         import traceback
-        state["log_messages"].append(f"❌ 绘图失败: {e}\n{traceback.format_exc()}")
 
+        state["log_messages"].append(f"绘图失败: {exc}\n{traceback.format_exc()}")
     return state
 
 
 def interpret_results(state: AnalysisState) -> AnalysisState:
-    """
-    节点7: 结果解读
-    
-    调用 LLM 解读分析结果
-    """
-    state["current_step"] = "interpret"
-    state["log_messages"].append(f"[{datetime.now()}] 解读分析结果...")
-    
-    # 使用 LLM 解读结果
-    try:
-        from .llm_client import create_llm_integration
-        
-        llm = create_llm_integration()
-        
-        # 准备数据
-        dataset_info = {
-            'dataset_id': state['dataset_id'],
-            **state.get('dataset_info', {})
-        }
-        
-        # LLM 解读
-        interpretation = llm.interpret_results(
-            dataset_info=dataset_info,
-            ssgsea_scores=state.get('ssgsea_scores', {}),
-            statistical_results=state.get('statistical_results')
-        )
-        
-        state['interpretation'] = interpretation
-        state['log_messages'].append("LLM 结果解读完成")
-        
-    except Exception as e:
-        state['log_messages'].append(f"LLM 解读失败: {e}")
-        
-        # 简单的回退解读
-        state['interpretation'] = f"""# 分析结果
-
-数据集: {state.get('dataset_info', {}).get('chinese_name', 'Unknown')}
-分析策略: {state.get('analysis_strategy', 'Unknown')}
-
-本研究对该数据集进行了五大功能系统分类分析。
-详细结果请参考生成的图表和统计表格。
-
-*注：自动解读功能不可用，建议人工审核结果。*
-"""
-    
-    return state
+    return reporting_interpret_results(state, _capture_llm_trace)
 
 
 def generate_report(state: AnalysisState) -> AnalysisState:
-    """节点8: 生成报告"""
-    state["current_step"] = "generate_report"
-    state["log_messages"].append(f"[{datetime.now()}] 生成分析报告...")
-    
-    # 组织报告内容
-    dataset_info = state.get("dataset_info", {})
-    ssgsea_scores = state.get("ssgsea_scores", {})
-    system_scores = state.get("system_scores", {})
-    classification_results = state.get("classification_results", {})
-    
-    # 创建报告内容
-    report_content = f"""# {dataset_info.get('chinese_name', 'Unknown')} 分析报告
-
-**数据集ID**: {state['dataset_id']}  
-**疾病类型**: {state.get('disease_type', 'Unknown')}  
-**分析时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
-**分析策略**: {state.get('analysis_strategy', 'Unknown')}
-
----
-
-## 1. 数据集信息
-
-- **名称**: {dataset_info.get('name', 'Unknown')}
-- **中文名**: {dataset_info.get('chinese_name', 'Unknown')}
-- **描述**: {dataset_info.get('description', 'Unknown')}
-- **预期系统**: {', '.join(dataset_info.get('expected_systems', []))}
-
-## 2. 数据处理
-
-- **样本数量**: {(state.get('sample_metadata') or {}).get('sample_count', 'Unknown')}
-- **基因数量**: {(classification_results or {}).get('total_genes', 'Unknown')}
-- **分类基因**: {(classification_results or {}).get('classified', 'Unknown')}
-
-## 3. 五大系统分类结果
-
-### 系统分布
-
-"""
-    
-    # 添加系统分布
-    for system, count in classification_results.get('system_counts', {}).items():
-        report_content += f"- **{system}**: {count} 个基因\n"
-    
-    report_content += "\n### 子类分布\n\n"
-    
-    # 添加子类分布（前10个）
-    subcats = list(classification_results.get('subcategory_counts', {}).items())[:10]
-    for subcat, count in subcats:
-        report_content += f"- **{subcat}**: {count} 个基因\n"
-    
-    report_content += "\n## 4. ssGSEA 分析结果\n\n### 系统激活得分\n\n"
-    
-    # 添加系统得分
-    for system, score in system_scores.items():
-        report_content += f"- **{system}**: {score:.3f}\n"
-    
-    report_content += "\n### 子类激活得分（Top 5）\n\n"
-    
-    # 添加 Top 5 子类得分
-    sorted_subcats = sorted(ssgsea_scores.items(), 
-                           key=lambda x: x[1]['mean_score'], 
-                           reverse=True)[:5]
-    
-    for code, info in sorted_subcats:
-        report_content += f"- **{code} ({info['name']})**: {info['mean_score']:.3f}\n"
-    
-    report_content += "\n## 5. 结果解读\n\n"
-    
-    # 添加 LLM 解读
-    interpretation = state.get("interpretation", "")
-    if interpretation:
-        report_content += interpretation
-    else:
-        report_content += "结果解读正在生成中...\n"
-    
-    report_content += "\n## 6. 可视化图表\n\n"
-    
-    # 添加图表列表
-    for i, fig_path in enumerate(state.get("figures", []), 1):
-        report_content += f"{i}. {fig_path}\n"
-    
-    report_content += "\n---\n\n"
-    report_content += "*本报告由疾病分析智能体自动生成*\n"
-    
-    state["report_content"] = report_content
-    
-    state["log_messages"].append(f"✓ 报告生成完成")
-    state["log_messages"].append(f"✓ 报告长度: {len(report_content)} 字符")
-    
-    return state
+    return reporting_generate_report(state)
 
 
 def export_pdf(state: AnalysisState) -> AnalysisState:
-    """节点9: 导出 PDF"""
-    state["current_step"] = "export_pdf"
-    state["log_messages"].append(f"[{datetime.now()}] 导出 PDF 报告...")
-    
-    import os
-    
-    # 确保输出目录存在
-    output_dir = f"results/agent_analysis/{state['dataset_id']}"
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # 暂时保存为 Markdown 文件（快速版）
-    report_path = os.path.join(output_dir, f"{state['dataset_id']}_report.md")
-    
-    report_content = state.get("report_content", "# 报告内容为空")
-    
-    with open(report_path, 'w', encoding='utf-8') as f:
-        f.write(report_content)
-    
-    state["report_path"] = report_path
-    
-    state["log_messages"].append(f"✓ 报告已保存: {report_path}")
-    state["log_messages"].append(f"✓ 文件大小: {len(report_content)} 字节")
-    
-    # 同时保存一个摘要 JSON
-    summary_path = os.path.join(output_dir, "analysis_summary.json")
-    
-    import json
-    summary = {
-        "dataset_id": state["dataset_id"],
-        "dataset_name": state.get("dataset_info", {}).get("chinese_name", "Unknown"),
-        "disease_type": state.get("disease_type", "Unknown"),
-        "analysis_strategy": state.get("analysis_strategy", "Unknown"),
-        "analysis_time": datetime.now().isoformat(),
-        "classification_results": state.get("classification_results", {}),
-        "system_scores": state.get("system_scores", {}),
-        "ssgsea_scores": {
-            code: {k: v for k, v in info.items() if k != 'matched_genes'}
-            for code, info in (state.get("ssgsea_scores") or {}).items()
-        },
-        "top_systems": [
-            sys for sys, _ in sorted(
-                (state.get("system_scores") or {}).items(),
-                key=lambda x: x[1], reverse=True
-            )[:3]
-        ],
-        "figures": state.get("figures", []),
-        "report_path": report_path,
-        "errors": state.get("errors", []),
-        "pipeline_log": state.get("log_messages", [])[-30:],
-    }
-    
-    with open(summary_path, 'w', encoding='utf-8') as f:
-        json.dump(summary, f, ensure_ascii=False, indent=2)
-    
-    state["log_messages"].append(f"✓ 摘要已保存: {summary_path}")
-    
-    return state
+    return reporting_export_pdf(state, _write_structured_artifacts)
 
 
 def handle_error(state: AnalysisState) -> AnalysisState:
-    """错误处理节点"""
     state["current_step"] = "error_handling"
     state["log_messages"].append(f"[{datetime.now()}] 处理错误...")
-    
-    # 记录错误信息
     if state.get("errors"):
-        state["log_messages"].append(f"⚠ 发现 {len(state['errors'])} 个错误:")
+        state["log_messages"].append(f"发现 {len(state['errors'])} 个错误:")
         for i, error in enumerate(state["errors"], 1):
             state["log_messages"].append(f"  {i}. {error}")
-    
-    # 检查是否可以重试
     if state.get("retry_count", 0) < 3:
         state["retry_count"] = state.get("retry_count", 0) + 1
         state["log_messages"].append(f"准备重试 (第 {state['retry_count']} 次)...")
     else:
         state["log_messages"].append("已达到最大重试次数，停止重试")
-    
     return state
 
 
-# ============================================================================
-# 条件边函数
-# ============================================================================
-
 def should_retry(state: AnalysisState) -> str:
-    """判断是否需要重试"""
     if state["errors"] and state["retry_count"] < 3:
         return "retry"
-    elif state["errors"]:
+    if state["errors"]:
         return "fail"
-    else:
-        return "continue"
+    return "continue"
 
 
 def route_by_strategy(state: AnalysisState) -> str:
-    """根据分析策略路由到不同的子图"""
     strategy = state.get("analysis_strategy", "default")
-    
     if strategy == "case_control":
         return "case_control_analysis"
-    elif strategy == "subtype_comparison":
+    if strategy == "subtype_comparison":
         return "subtype_analysis"
-    elif strategy == "time_series":
+    if strategy == "time_series":
         return "time_series_analysis"
-    elif strategy == "correlation":
+    if strategy == "correlation":
         return "correlation_analysis"
-    else:
-        return "default_analysis"
+    return "default_analysis"
 
 
 def needs_human_review(state: AnalysisState) -> str:
-    """判断是否需要人工审核"""
-    if state.get("needs_human_review", False):
-        return "human_review"
-    else:
-        return "continue"
+    return "human_review" if state.get("needs_human_review", False) else "continue"
 
-
-# ============================================================================
-# 构建图
-# ============================================================================
 
 def create_disease_analysis_graph():
-    """创建疾病分析工作流图"""
-    
-    # 创建状态图
     workflow = StateGraph(AnalysisState)
-    
-    # 添加节点
-    workflow.add_node("extract_metadata", extract_dataset_metadata)
-    workflow.add_node("decide_strategy", decide_analysis_strategy)
-    workflow.add_node("download", download_dataset)
-    workflow.add_node("preprocess", preprocess_data)
-    workflow.add_node("classify", classify_genes)
-    workflow.add_node("ssgsea", perform_ssgsea)
-    workflow.add_node("decide_visualization", decide_visualization)
-    workflow.add_node("generate_plots", generate_plots)
-    workflow.add_node("interpret", interpret_results)
-    workflow.add_node("generate_report", generate_report)
-    workflow.add_node("export_pdf", export_pdf)
-    workflow.add_node("error_handler", handle_error)
-    
-    # 设置入口点
+    workflow.add_node("extract_metadata", _wrap_node("extract_metadata", extract_dataset_metadata))
+    workflow.add_node("decide_strategy", _wrap_node("decide_strategy", decide_analysis_strategy))
+    workflow.add_node("download", _wrap_node("download", download_dataset))
+    workflow.add_node("preprocess", _wrap_node("preprocess", preprocess_data))
+    workflow.add_node("classify", _wrap_node("classify", classify_genes))
+    workflow.add_node("ssgsea", _wrap_node("ssgsea", perform_ssgsea))
+    workflow.add_node("decide_visualization", _wrap_node("decide_visualization", decide_visualization))
+    workflow.add_node("generate_plots", _wrap_node("generate_plots", generate_plots))
+    workflow.add_node("interpret", _wrap_node("interpret", interpret_results))
+    workflow.add_node("generate_report", _wrap_node("generate_report", generate_report))
+    workflow.add_node("export_pdf", _wrap_node("export_pdf", export_pdf))
+    workflow.add_node("error_handler", _wrap_node("error_handler", handle_error))
+
     workflow.set_entry_point("extract_metadata")
-    
-    # 添加边
     workflow.add_edge("extract_metadata", "decide_strategy")
-    
-    # 条件边：根据策略路由
     workflow.add_conditional_edges(
         "decide_strategy",
         route_by_strategy,
@@ -1183,19 +694,18 @@ def create_disease_analysis_graph():
             "subtype_analysis": "download",
             "time_series_analysis": "download",
             "correlation_analysis": "download",
-            "default_analysis": "download"
-        }
+            "default_analysis": "download",
+        },
     )
-    
     workflow.add_conditional_edges(
         "download",
         lambda s: "preprocess" if s.get("raw_data_path") else "export_pdf",
-        {"preprocess": "preprocess", "export_pdf": "export_pdf"}
+        {"preprocess": "preprocess", "export_pdf": "export_pdf"},
     )
     workflow.add_conditional_edges(
         "preprocess",
         lambda s: "classify" if s.get("expression_matrix") is not None else "export_pdf",
-        {"classify": "classify", "export_pdf": "export_pdf"}
+        {"classify": "classify", "export_pdf": "export_pdf"},
     )
     workflow.add_edge("classify", "ssgsea")
     workflow.add_edge("ssgsea", "decide_visualization")
@@ -1204,31 +714,16 @@ def create_disease_analysis_graph():
     workflow.add_edge("interpret", "generate_report")
     workflow.add_edge("generate_report", "export_pdf")
     workflow.add_edge("export_pdf", END)
-    
-    # 编译图（不使用 checkpointer，避免 DataFrame 序列化问题）
-    app = workflow.compile()
-    
-    return app
+    return workflow.compile()
 
 
-# ============================================================================
-# 主函数
-# ============================================================================
-
-def run_disease_analysis(dataset_id: str, config: Optional[Dict] = None, dataset_info: Optional[Dict] = None):
-    """
-    运行疾病分析工作流
-    
-    Args:
-        dataset_id: 数据集ID
-        config: 配置参数
-        dataset_info: 数据集元信息（来自 DiseaseSelector 推荐，用于 LLM 新推荐的数据集）
-    """
-    # 创建工作流
+def run_disease_analysis(
+    dataset_id: str,
+    config: Optional[Dict[str, Any]] = None,
+    dataset_info: Optional[Dict[str, Any]] = None,
+):
     app = create_disease_analysis_graph()
-    
-    # 初始化状态
-    initial_state = {
+    initial_state: AnalysisState = {
         "dataset_id": dataset_id,
         "dataset_info": dataset_info or {},
         "raw_data_path": None,
@@ -1250,27 +745,35 @@ def run_disease_analysis(dataset_id: str, config: Optional[Dict] = None, dataset
         "log_messages": [],
         "errors": [],
         "current_step": "init",
+        "run_id": f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{dataset_id}",
+        "node_events": [],
+        "llm_traces": [],
         "needs_human_review": False,
-        "retry_count": 0
+        "retry_count": 0,
     }
-    
-    # 运行工作流（无 checkpointer，直接 invoke）
+
     print(f"开始分析数据集: {dataset_id}")
-    print("="*80)
-    
+    print("=" * 80)
+    final_state = initial_state
     for output in app.stream(initial_state):
-        # 打印当前步骤
         for node_name, node_output in output.items():
-            print(f"\n[{node_name}] 执行完成")
+            final_state = node_output
+            print(_safe_console_text(f"\n[{node_name}] 执行完成"))
             if node_output.get("log_messages"):
-                print(f"  最新日志: {node_output['log_messages'][-1]}")
-    
-    print("\n" + "="*80)
-    print("分析完成！")
-    
-    return output
+                print(_safe_console_text(f"  最新日志: {node_output['log_messages'][-1]}"))
+            if node_output.get("node_events"):
+                latest_event = node_output["node_events"][-1]
+                print(
+                    _safe_console_text(
+                        f"  状态: {latest_event.get('status')} | "
+                        f"耗时: {latest_event.get('duration_ms')} ms"
+                    )
+                )
+
+    print("\n" + "=" * 80)
+    print(_safe_console_text("分析完成！"))
+    return final_state
 
 
 if __name__ == "__main__":
-    # 测试运行
-    result = run_disease_analysis("GSE2034")
+    run_disease_analysis("GSE2034")
