@@ -120,14 +120,7 @@ class DiseaseSelector:
     @staticmethod
     def _looks_like_valid_manual_dataset(folder: Path) -> bool:
         series_files = list(folder.glob("*_series_matrix.txt.gz"))
-        platform_files = (
-            list(folder.glob("GPL*.annot.gz"))
-            + list(folder.glob("GPL*.txt"))
-            + list(folder.glob("GPL*.txt.gz"))
-            + list(folder.glob("GPL*.soft"))
-            + list(folder.glob("GPL*.soft.gz"))
-        )
-        return bool(series_files and platform_files)
+        return bool(series_files)
 
     @staticmethod
     def _lookup_disease_type(dataset_id: str) -> Optional[str]:

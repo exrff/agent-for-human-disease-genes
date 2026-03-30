@@ -95,6 +95,22 @@ def perform_ssgsea(state: Dict[str, Any]) -> Dict[str, Any]:
             if system:
                 system_score_lists[system].append(mean_score)
 
+        total_matched = sum(v.get("matched_genes", 0) for v in ssgsea_scores.values())
+        if total_matched == 0:
+            state["errors"].append(
+                "ssGSEA matched_genes are all zero; this usually indicates missing/incorrect probe-to-gene mapping"
+            )
+            hint = (
+                (state.get("metadata") or {}).get("matrix_identifier_type")
+                if isinstance(state.get("metadata"), dict)
+                else None
+            )
+            state["log_messages"].append(
+                "ssGSEA stop: all subcategories have 0 matched genes; "
+                f"matrix_identifier_type={hint}"
+            )
+            return state
+
         system_scores = {
             system: float(np.mean(values)) if values else 0.0
             for system, values in system_score_lists.items()

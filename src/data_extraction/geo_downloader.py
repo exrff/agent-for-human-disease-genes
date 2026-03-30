@@ -7,7 +7,6 @@ import gzip
 import html
 import logging
 import re
-import shutil
 import time
 import urllib.parse
 import urllib.request
@@ -115,19 +114,22 @@ class GEODownloader:
             return None
 
     def _get_platform_file(self, platform_id: str, output_dir: Path) -> Optional[Path]:
-        cached_file = self._copy_cached_platform_file(platform_id, output_dir)
+        _ = output_dir
+        cache_dir = Path("data/gpl_platforms")
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        cached_file = self._copy_cached_platform_file(platform_id)
         if cached_file:
             return cached_file
 
-        downloaded_file = self._download_platform_file(platform_id, output_dir)
+        downloaded_file = self._download_platform_file(platform_id, cache_dir)
         if downloaded_file:
-            self._cache_platform_file(downloaded_file)
             return downloaded_file
 
         self.logger.error(f"  ❌ 本地未找到 {platform_id} 平台文件，且在线下载失败")
         return None
 
-    def _copy_cached_platform_file(self, platform_id: str, output_dir: Path) -> Optional[Path]:
+    def _copy_cached_platform_file(self, platform_id: str) -> Optional[Path]:
         gpl_dir = Path("data/gpl_platforms")
         if not gpl_dir.exists():
             return None
@@ -139,10 +141,7 @@ class GEODownloader:
                 or platform_file.name.endswith(".soft.gz")
             ):
                 self.logger.info(f"  ✓ 找到本地平台文件: {platform_file.name}")
-                dest_file = output_dir / platform_file.name
-                if not dest_file.exists():
-                    shutil.copy2(platform_file, dest_file)
-                return dest_file
+                return platform_file
         return None
 
     def _download_platform_file(self, platform_id: str, output_dir: Path) -> Optional[Path]:
@@ -253,13 +252,6 @@ class GEODownloader:
                 continue
         return None
 
-    def _cache_platform_file(self, platform_file: Path) -> None:
-        cache_dir = Path("data/gpl_platforms")
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        cache_path = cache_dir / platform_file.name
-        if not cache_path.exists():
-            shutil.copy2(platform_file, cache_path)
-
     def _extract_platform_ids(self, series_file: Path) -> List[str]:
         platform_ids: List[str] = []
         try:
@@ -301,14 +293,7 @@ class GEODownloader:
         if not series_file.exists():
             return False
 
-        platform_files = (
-            list(dataset_dir.glob("GPL*.annot.gz"))
-            + list(dataset_dir.glob("GPL*.txt"))
-            + list(dataset_dir.glob("GPL*.txt.gz"))
-            + list(dataset_dir.glob("GPL*.soft"))
-            + list(dataset_dir.glob("GPL*.soft.gz"))
-        )
-        return len(platform_files) > 0
+        return True
 
 
 def download_geo_dataset(gse_id: str, output_dir: str = "data/validation_datasets") -> Dict[str, object]:

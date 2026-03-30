@@ -19,6 +19,11 @@ from .analysis_nodes_reporting import (
     generate_report as reporting_generate_report,
     interpret_results as reporting_interpret_results,
 )
+from .analysis_nodes_mode import (
+    compute_mode_specific_analysis as mode_compute_mode_specific_analysis,
+    decide_analysis_mode as mode_decide_analysis_mode,
+    decide_plot_plan as mode_decide_plot_plan,
+)
 from .analysis_nodes_scoring import (
     classify_genes as scoring_classify_genes,
     perform_ssgsea as scoring_perform_ssgsea,
@@ -27,6 +32,7 @@ from .geo_parsing import (
     extract_gene_symbol_from_annotation as parsing_extract_gene_symbol_from_annotation,
     extract_sample_info as parsing_extract_sample_info,
     find_gpl_file as parsing_find_gpl_file,
+    infer_matrix_identifier_type as parsing_infer_matrix_identifier_type,
     map_probe_to_gene as parsing_map_probe_to_gene,
     parse_gpl_annotation as parsing_parse_gpl_annotation,
     parse_series_matrix as parsing_parse_series_matrix,
@@ -51,6 +57,13 @@ class AnalysisState(TypedDict):
     ssgsea_scores: Optional[Dict[str, Any]]
     system_scores: Optional[Dict[str, Any]]
     statistical_results: Optional[Dict[str, Any]]
+    analysis_mode: Optional[str]
+    analysis_design: Optional[Dict[str, Any]]
+    grouping_info: Optional[Dict[str, Any]]
+    focus_subcategories: List[str]
+    focus_systems: List[str]
+    plot_plan: Optional[Dict[str, Any]]
+    mode_specific_results: Optional[Dict[str, Any]]
     disease_type: Optional[str]
     analysis_strategy: Optional[str]
     visualization_plan: List[str]
@@ -134,8 +147,10 @@ def _summarize_input(node_name: str, state: AnalysisState) -> Dict[str, Any]:
     if node_name in {"classify", "ssgsea"}:
         matrix = state.get("expression_matrix")
         summary["expression_matrix_shape"] = list(matrix.shape) if matrix is not None else None
-    if node_name in {"decide_visualization", "generate_plots"}:
+    if node_name in {"decide_plot_plan", "decide_visualization", "generate_plots"}:
         summary["visualization_plan"] = state.get("visualization_plan", [])
+    if node_name in {"decide_analysis_mode", "compute_mode_specific_analysis", "decide_plot_plan"}:
+        summary["analysis_mode"] = state.get("analysis_mode")
     return _make_json_safe(summary)
 
 
@@ -163,6 +178,15 @@ def _summarize_output(node_name: str, state: AnalysisState) -> Dict[str, Any]:
         }
     elif node_name == "ssgsea":
         output["system_scores"] = state.get("system_scores")
+    elif node_name == "decide_analysis_mode":
+        output["analysis_mode"] = state.get("analysis_mode")
+        output["analysis_design"] = state.get("analysis_design")
+    elif node_name == "compute_mode_specific_analysis":
+        output["statistical_results"] = state.get("statistical_results")
+        output["focus_subcategories"] = state.get("focus_subcategories", [])
+        output["focus_systems"] = state.get("focus_systems", [])
+    elif node_name == "decide_plot_plan":
+        output["plot_plan"] = state.get("plot_plan")
     elif node_name == "decide_visualization":
         output["visualization_plan"] = state.get("visualization_plan", [])
     elif node_name == "generate_plots":
@@ -221,6 +245,26 @@ def _collect_node_metrics(node_name: str, state: AnalysisState) -> Dict[str, Any
             "subcategory_count": len(scores),
             "system_scores": state.get("system_scores") or {},
             "top_subcategories": top_subcategories,
+        }
+    elif node_name == "decide_analysis_mode":
+        metrics = {
+            "analysis_mode": state.get("analysis_mode"),
+            "detected_signals": (state.get("analysis_design") or {}).get("detected_signals", []),
+        }
+    elif node_name == "compute_mode_specific_analysis":
+        mode_result = state.get("mode_specific_results") or {}
+        metrics = {
+            "analysis_mode": state.get("analysis_mode"),
+            "mode_result_status": mode_result.get("status"),
+            "focus_subcategories": state.get("focus_subcategories", []),
+            "focus_systems": state.get("focus_systems", []),
+        }
+    elif node_name == "decide_plot_plan":
+        plan = state.get("plot_plan") or {}
+        metrics = {
+            "plot_count": len(plan.get("plots", [])),
+            "plots": plan.get("plots", []),
+            "focus_subcategories": plan.get("focus_subcategories", []),
         }
     elif node_name == "decide_visualization":
         metrics = {
@@ -460,6 +504,7 @@ def preprocess_data(state: AnalysisState) -> AnalysisState:
         state,
         parsing_find_gpl_file,
         parsing_parse_series_matrix,
+        parsing_infer_matrix_identifier_type,
         parsing_parse_gpl_annotation,
         parsing_map_probe_to_gene,
         parsing_extract_sample_info,
@@ -506,12 +551,32 @@ def perform_ssgsea(state: AnalysisState) -> AnalysisState:
     return scoring_perform_ssgsea(state)
 
 
+def decide_analysis_mode(state: AnalysisState) -> AnalysisState:
+    return mode_decide_analysis_mode(state)
+
+
+def compute_mode_specific_analysis(state: AnalysisState) -> AnalysisState:
+    return mode_compute_mode_specific_analysis(state)
+
+
+def decide_plot_plan(state: AnalysisState) -> AnalysisState:
+    return mode_decide_plot_plan(state)
+
+
 def _compute_ssgsea_scores(gene_expr_df, gene_set_genes: list, alpha: float = 0.25):
     return shared_compute_ssgsea_scores(gene_expr_df, gene_set_genes, alpha=alpha)
 
 
 def decide_visualization(state: AnalysisState) -> AnalysisState:
     state["current_step"] = "decide_visualization"
+    if state.get("plot_plan") and state["plot_plan"].get("plots"):
+        planned = state["plot_plan"]["plots"]
+        state["visualization_plan"] = planned
+        state["log_messages"].append(
+            f"visualization plan from mode-aware plot_plan: {', '.join(planned)}"
+        )
+        return state
+
     viz_map = {
         "heatmap": "heatmap",
         "boxplot": "boxplot",
@@ -605,6 +670,8 @@ def generate_plots(state: AnalysisState) -> AnalysisState:
             system_scores=system_scores,
             gene_expr_df=gene_expr_df,
             sample_metadata=state.get("sample_metadata"),
+            statistical_results=state.get("statistical_results"),
+            focus_subcategories=state.get("focus_subcategories"),
             output_dir=output_dir,
             viz_plan=viz_plan,
         )
@@ -677,6 +744,12 @@ def create_disease_analysis_graph():
     workflow.add_node("preprocess", _wrap_node("preprocess", preprocess_data))
     workflow.add_node("classify", _wrap_node("classify", classify_genes))
     workflow.add_node("ssgsea", _wrap_node("ssgsea", perform_ssgsea))
+    workflow.add_node("decide_analysis_mode", _wrap_node("decide_analysis_mode", decide_analysis_mode))
+    workflow.add_node(
+        "compute_mode_specific_analysis",
+        _wrap_node("compute_mode_specific_analysis", compute_mode_specific_analysis),
+    )
+    workflow.add_node("decide_plot_plan", _wrap_node("decide_plot_plan", decide_plot_plan))
     workflow.add_node("decide_visualization", _wrap_node("decide_visualization", decide_visualization))
     workflow.add_node("generate_plots", _wrap_node("generate_plots", generate_plots))
     workflow.add_node("interpret", _wrap_node("interpret", interpret_results))
@@ -708,7 +781,10 @@ def create_disease_analysis_graph():
         {"classify": "classify", "export_pdf": "export_pdf"},
     )
     workflow.add_edge("classify", "ssgsea")
-    workflow.add_edge("ssgsea", "decide_visualization")
+    workflow.add_edge("ssgsea", "decide_analysis_mode")
+    workflow.add_edge("decide_analysis_mode", "compute_mode_specific_analysis")
+    workflow.add_edge("compute_mode_specific_analysis", "decide_plot_plan")
+    workflow.add_edge("decide_plot_plan", "decide_visualization")
     workflow.add_edge("decide_visualization", "generate_plots")
     workflow.add_edge("generate_plots", "interpret")
     workflow.add_edge("interpret", "generate_report")
@@ -734,6 +810,13 @@ def run_disease_analysis(
         "ssgsea_scores": None,
         "system_scores": None,
         "statistical_results": None,
+        "analysis_mode": None,
+        "analysis_design": None,
+        "grouping_info": None,
+        "focus_subcategories": [],
+        "focus_systems": [],
+        "plot_plan": None,
+        "mode_specific_results": None,
         "disease_type": None,
         "analysis_strategy": None,
         "visualization_plan": [],

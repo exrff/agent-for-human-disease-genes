@@ -1,26 +1,33 @@
-请你作为生物信息学可视化顾问，根据分析策略和数据特点推荐最合适的图表方案。
+你是生物信息学可视化顾问。请根据分析策略与数据特征，输出“多样化且互补”的图表方案。
 
 分析策略: __ANALYSIS_STRATEGY__
-
-数据特点:
+数据特征:
 __DATA_CHARACTERISTICS__
 
-可选图表类型
+候选图类型（可多选，优先覆盖不同信息维度）:
+- radar
+- barplot
 - heatmap
 - boxplot
-- volcano
-- time_series
-- clustering
-- network
-- correlation_heatmap
-- trajectory
+- correlation
+- time_series_system
+- time_series_subcategory
+- grouped_subtype_boxplot
+- trait_scatter_plot
+- expected_vs_observed_barplot
+- system_correlation_matrix
+- heterogeneity_heatmap
 
-请只返回 JSON，格式如下：
+选择要求:
+1. 至少给出 4 种图，且不要全部是同类型热图。
+2. 优先包含“总体概览 + 组间差异/动态变化 + 结构关系”三类信息。
+3. 如果策略是 time_series / subtype / continuous_trait，必须包含对应的专属图类型。
+4. 若元数据不完整，说明降级原因并给出稳健替代图。
+
+只返回 JSON，不要输出 Markdown 代码块，不要输出额外解释:
 {
-    "primary_visualizations": ["最推荐的图表"],
-    "secondary_visualizations": ["可选补充图表"],
-    "reasoning": "简要解释",
-    "layout_suggestions": "版式建议"
+  "primary_visualizations": ["最推荐图1", "最推荐图2", "最推荐图3", "最推荐图4"],
+  "secondary_visualizations": ["补充图1", "补充图2"],
+  "reasoning": "简要说明选择逻辑与取舍",
+  "layout_suggestions": "版式建议"
 }
-
-不要输出 Markdown 代码块，不要输出额外解释。

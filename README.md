@@ -177,6 +177,12 @@ python run_auto_analysis.py --mode single
 python scripts/fetch_geo_whitelist.py
 ```
 
+定向扩充（按 GPL 平台自动筛选并与现有白名单合并）：
+
+```bash
+python scripts/fetch_geo_whitelist.py --mode expand --platforms GPL570,GPL13158 --max-results 80 --min-samples 20 --check-series-matrix --merge
+```
+
 ## Prompt 设计
 
 Prompt 模板位于：

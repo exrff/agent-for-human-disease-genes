@@ -33,6 +33,8 @@ def validate_series_matrix(series_file) -> dict:
             else open(path, "r", encoding="utf-8", errors="ignore")
         )
         has_table = False
+        in_table = False
+        table_line_count = 0
         organism = None
         is_super = False
         sample_count = 0
@@ -43,6 +45,14 @@ def validate_series_matrix(series_file) -> dict:
                 lower = line.lower()
                 if "!series_matrix_table_begin" in lower:
                     has_table = True
+                    in_table = True
+                    table_line_count = 0
+                    continue
+                if in_table:
+                    if "!series_matrix_table_end" in lower:
+                        in_table = False
+                    elif line.strip():
+                        table_line_count += 1
                 if "!Series_platform_taxid" in line or "!Series_sample_taxid" in line:
                     if "10090" in line:
                         organism = "mouse"
@@ -63,6 +73,10 @@ def validate_series_matrix(series_file) -> dict:
             return result
         if not has_table:
             result["reason"] = "Missing !series_matrix_table_begin"
+            return result
+        # table_line_count includes the header row. Require at least one data row.
+        if table_line_count <= 1:
+            result["reason"] = "Series matrix table is empty (header only, no expression rows)"
             return result
 
         all_types = " ".join(series_types)
@@ -150,6 +164,53 @@ def parse_series_matrix(series_file: Path):
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors="coerce")
     return df.dropna(how="all")
+
+
+def infer_matrix_identifier_type(expr_df) -> str:
+    """Infer whether matrix row identifiers are gene-like or probe-like."""
+    import re
+
+    if expr_df is None or len(expr_df.index) == 0:
+        return "unknown"
+
+    ids = [str(x).strip() for x in expr_df.index[:300]]
+    ids = [x for x in ids if x]
+    if not ids:
+        return "unknown"
+
+    gene_symbol_like = sum(
+        1 for x in ids if re.match(r"^[A-Za-z][A-Za-z0-9._-]{1,24}$", x)
+    ) / len(ids)
+    ensembl_like = sum(
+        1 for x in ids if re.match(r"^ENS[A-Z]*G\d+(\.\d+)?$", x)
+    ) / len(ids)
+    refseq_like = sum(
+        1 for x in ids if re.match(r"^[NXYWZ][MR]_\d+(\.\d+)?$", x)
+    ) / len(ids)
+    probe_like = sum(
+        1
+        for x in ids
+        if (
+            x.startswith(("ILMN_", "AFFX", "A_", "cg", "TC"))
+            or re.match(r"^\d+$", x)
+            or "|" in x
+            or ":" in x
+            or re.match(r"^[A-Za-z]{1,4}\d{5,}$", x)
+            or re.search(r"_(at|s_at|x_at|st)$", x, flags=re.IGNORECASE)
+            or re.match(r"^HTA\d+-", x, flags=re.IGNORECASE)
+            or re.match(r"^TC\d+\..*hg\.\d+$", x, flags=re.IGNORECASE)
+            or re.match(r"^TSUnmapped\d+", x, flags=re.IGNORECASE)
+        )
+    ) / len(ids)
+
+    gene_like_score = max(gene_symbol_like, ensembl_like, refseq_like)
+    if probe_like >= 0.10:
+        return "probe"
+    if gene_like_score >= 0.6 and probe_like < 0.10:
+        return "gene"
+    if probe_like >= 0.05:
+        return "probe"
+    return "unknown"
 
 
 def parse_gpl_annotation(gpl_file: Path):
@@ -242,6 +303,32 @@ def parse_gpl_annotation(gpl_file: Path):
         if probe_is_ensembl and spot_looks_like_symbol and (gene_col is None or gene_col_is_ensembl):
             gene_col = "SPOT_ID"
 
+    # Some family.soft platforms use ID/SPOT_ID directly as gene symbols
+    # (e.g. NanoString-like tables with columns: ID, Accession #, Class name, SPOT_ID).
+    if gene_col is None and "SPOT_ID" in df.columns:
+        spot_series = df["SPOT_ID"].astype(str)
+        spot_looks_like_symbol = (
+            spot_series.str.match(r"^[A-Za-z][A-Za-z0-9._-]{1,24}$", na=False).mean() > 0.6
+        )
+        spot_not_numeric = (~spot_series.str.match(r"^\d+(\.\d+)?$", na=False)).mean() > 0.9
+        # Avoid choosing low-information categorical labels like Coding / Multiple_Complex.
+        spot_unique_ratio = (
+            float(spot_series.nunique()) / max(len(spot_series), 1)
+        )
+        banned_tokens = {
+            "coding",
+            "multiple_complex",
+            "multiple",
+            "complex",
+            "control",
+            "main",
+            "antisense",
+            "sense",
+        }
+        banned_ratio = spot_series.str.lower().isin(banned_tokens).mean()
+        if spot_looks_like_symbol and spot_not_numeric and spot_unique_ratio > 0.15 and banned_ratio < 0.3:
+            gene_col = "SPOT_ID"
+
     if gene_col is not None:
         mapping = df[[probe_col, gene_col]].copy()
         mapping.columns = ["probe_id", "gene_symbol"]
@@ -280,6 +367,11 @@ def parse_gpl_annotation(gpl_file: Path):
         .str[0]
         .str.strip()
     )
+    mapping = mapping[
+        ~mapping["gene_symbol"].str.lower().isin(
+            {"coding", "multiple_complex", "multiple", "complex", "control", "main"}
+        )
+    ]
     mapping["probe_id"] = mapping["probe_id"].astype(str)
     return mapping.reset_index(drop=True)
 
@@ -298,6 +390,9 @@ def extract_gene_symbol_from_annotation(annotation: str) -> str:
         match = re.search(pattern, text)
         if match:
             return match.group(1).strip()
+    plain = text.strip()
+    if re.match(r"^[A-Za-z][A-Za-z0-9._-]{1,24}$", plain):
+        return plain
     return ""
 
 

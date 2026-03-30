@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import csv
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
 LOGGER = logging.getLogger(__name__)
 WHITELIST_PATH = Path(__file__).resolve().parents[2] / "data" / "geo_whitelist.csv"
+FAILED_ARCHIVE_PATH = Path(__file__).resolve().parents[2] / "data" / "failed_whitelist_datasets.csv"
 
 
 def _normalize_expected_systems(raw_value: str) -> List[str]:
@@ -60,3 +62,48 @@ def load_whitelist_datasets() -> Dict[str, Dict[str, Any]]:
 def get_dataset_info(dataset_id: str) -> Optional[Dict[str, Any]]:
     """Return whitelist metadata for a single dataset."""
     return load_whitelist_datasets().get(dataset_id)
+
+
+def remove_dataset_from_whitelist(dataset_id: str, reason: str = "") -> bool:
+    """Remove one dataset from whitelist and archive the removed row."""
+    if not WHITELIST_PATH.exists():
+        LOGGER.warning("Whitelist file not found when removing dataset: %s", WHITELIST_PATH)
+        return False
+
+    with open(WHITELIST_PATH, "r", encoding="utf-8-sig", newline="") as fh:
+        reader = csv.DictReader(fh)
+        rows = list(reader)
+        fieldnames = list(reader.fieldnames or [])
+
+    removed_row: Optional[Dict[str, str]] = None
+    kept_rows: List[Dict[str, str]] = []
+    for row in rows:
+        current_id = (row.get("dataset_id") or "").strip()
+        if current_id == dataset_id and removed_row is None:
+            removed_row = dict(row)
+            continue
+        kept_rows.append(row)
+
+    if removed_row is None:
+        LOGGER.info("Dataset not found in whitelist, nothing removed: %s", dataset_id)
+        return False
+
+    with open(WHITELIST_PATH, "w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(kept_rows)
+
+    archive_exists = FAILED_ARCHIVE_PATH.exists()
+    archive_fields = fieldnames + ["removed_at", "remove_reason"]
+    archive_row = {k: removed_row.get(k, "") for k in fieldnames}
+    archive_row["removed_at"] = datetime.now().isoformat(timespec="seconds")
+    archive_row["remove_reason"] = reason
+
+    with open(FAILED_ARCHIVE_PATH, "a", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=archive_fields)
+        if not archive_exists:
+            writer.writeheader()
+        writer.writerow(archive_row)
+
+    LOGGER.info("Removed dataset from whitelist: %s", dataset_id)
+    return True

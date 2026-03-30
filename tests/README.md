@@ -9,6 +9,8 @@
   作用：测试 `geo_parsing`、`scoring_core` 和 `plot_generator` 的联动
 - `_test_validator.py`
   作用：测试 `geo_validator` 的 GEO 数据集验证
+- `_test_analysis_mode.py`
+  作用：测试第一期 `analysis_mode` 判定、模式统计骨架和 `plot_plan`
 - `test_geo_downloader.py`
   作用：测试 GEO 下载器
 
@@ -17,6 +19,7 @@
 python tests/_test_llm.py
 python tests/_test_plots.py
 python tests/_test_validator.py
+python tests/_test_analysis_mode.py
 python tests/test_geo_downloader.py
 ```
 
